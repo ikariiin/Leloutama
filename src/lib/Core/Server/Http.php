@@ -42,11 +42,8 @@ class Http {
         return $parsedHeaders;
     }
 
-    public function getRequestedResource(): string {
-        return $this->parsedHeaders["route"]["uri"];
-    }
 
-    public function parseRawSocketRequest($client) {
+    public function parseRawSocketRequest($client): string {
         $buffer = "";
         while(($chars = socket_read($client, 4096, PHP_NORMAL_READ))) {
             $buffer .= $chars;
@@ -54,12 +51,12 @@ class Http {
         return trim($buffer);
     }
 
-    public function matchRoute(string $requestedRoute, Router $router) {
+    public function getInfo(string $requestedRoute, Router $router) {
         $routes = $router->getRoutes();
         $routesCount = $routes;
         for($i = 0; $i < $routesCount; $i++) {
             if($routes[$i]->getExposedRoute() == $requestedRoute) {
-                return $routes[$i]->getContent();
+                return [$routes[$i]->getContent(), $routes[$i]->getMime()];
             } else {
                 return false;
             }
@@ -69,5 +66,32 @@ class Http {
 
     public function getMIMEType(string $fileName): string {
         return mime_content_type($fileName);
+    }
+
+    /**
+     * Header information getting methods
+     */
+    public function getRequestedResource(): string {
+        return $this->parsedHeaders["route"]["uri"];
+    }
+
+    public function getMethod(): string {
+        return $this->parsedHeaders["route"]["method"];
+    }
+
+    public function getHttpVersion(): string {
+        return $this->parsedHeaders["route"]["http"];
+    }
+
+    public function getHeaderParam(string $param): string {
+        return $this->parsedHeaders[$param];
+    }
+
+    public function getAcceptedEncoding(): array {
+        return explode(", ", $this->parsedHeaders["Accept-Encoding"]);
+    }
+
+    public function getCookies(): array {
+        return explode("; ", $this->parsedHeaders["Cookie"]);
     }
 }

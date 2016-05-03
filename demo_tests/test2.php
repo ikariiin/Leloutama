@@ -10,6 +10,7 @@ require "../src/lib/Core/Router/Router.php";
 require "../src/lib/Core/Server/Server.php";
 
 $router = new Leloutama\lib\Core\Router\Router();
-$router->setRoute("/", "hmm");
+$router->setRoute("/", "hmm", "text/plain");
+$router->setRoute("/hello", "<h1>Hello</h1>");
 $server = new Leloutama\lib\Core\Server\Server($router);
 $server->startServer();

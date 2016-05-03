@@ -11,6 +11,7 @@ namespace Leloutama\lib\Core\Server;
 class ThreadDispatcher extends \Thread {
     private $ToPerform;
     private $arguments;
+    public $response;
 
     public function __construct(callable $ToPerform, array $arguments) {
         $this->ToPerform = $ToPerform;
@@ -19,6 +20,6 @@ class ThreadDispatcher extends \Thread {
 
     public function run() {
         $ToPerform = $this->ToPerform;
-        return $ToPerform($this->arguments);
+        return $ToPerform($this->arguments, $this);
     }
 }

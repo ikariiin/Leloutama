@@ -7,15 +7,15 @@
  */
 
 namespace Leloutama\lib\Core\Server;
-require "Client.php";
-require "ThreadDispatcher.php";
+require __DIR__ . "/Client.php";
+require __DIR__ . "/ThreadDispatcher.php";
 use Leloutama\lib\Core\Router\Router;
 
 class Server {
     private $router;
     private $args;
 
-    public function __construct(Router $router, string $ipAddress = "127.0.0.1", int $port = 1024) {
+    public function __construct(Router $router, string $ipAddress = "127.0.0.1", int $port = 15956) {
         $this->args = [$router, $ipAddress, $port];
 
         $this->router = $router;
@@ -49,7 +49,7 @@ class Server {
                 $stringHeaders = $http->parseRawSocketRequest($client);
 
                 if(strlen($stringHeaders) > 0) {
-                    $ClientThread = new ThreadDispatcher(function(array $arguments){
+                    $ClientThread = new ThreadDispatcher(function(array $arguments, &$_this){
                         $random = rand();
                         $uid = hash("gost", $random);
 
@@ -58,7 +58,10 @@ class Server {
                         );
                         $client[$uid] = new Client($arguments[0], $arguments[1]);
 
-                        if($client[$uid]->serve()) {
+                        $serveOP = $client[$uid]->serve();
+                        if(!empty($serveOP)) {
+                            $_this->response = $serveOP;
+
                             $client[$uid] = null;
                             unset($client[$uid]);
                             printf("Closed the Client Thread with the uid: %s\n",
@@ -67,13 +70,16 @@ class Server {
                             printf("Currently running number of processes: %d\n",
                                 count($client)
                             );
-                            return true;
                         }
 
                         return false;
                     }, [$args[0], $stringHeaders]);
 
                     $ClientThread->run();
+
+                    if(isset($ClientThread->response)) {
+                        socket_write($client, $ClientThread->response);
+                    }
                 }
             }
         };

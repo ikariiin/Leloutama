@@ -10,6 +10,7 @@ namespace Leloutama\lib\Core\Router;
 class Nodes {
     protected $expose;
     protected $content;
+    protected $mime;
 
     /**
      * Constructor for providing an instance of self.
@@ -36,6 +37,15 @@ class Nodes {
     public function setContent(string $content): self {
         $this->content = $content;
         return $this;
+    }
+
+    public function setMime(string $mime) {
+        $this->mime = $mime;
+        return $this;
+    }
+
+    public function getMime() {
+        return $this->mime;
     }
 
     public function getExposedRoute(): string {
