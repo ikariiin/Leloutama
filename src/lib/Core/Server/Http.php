@@ -44,21 +44,35 @@ class Http {
 
 
     public function parseRawSocketRequest($client): string {
-        $buffer = "";
+        $head = [];
+        $header = 0;
         while(($chars = socket_read($client, 4096, PHP_NORMAL_READ))) {
-            $buffer .= $chars;
+            $head[$header] = trim($chars);
+            if($header > 0) {
+                if(!$head[$header] && !$head[$header - 1])
+                    break;
+            }
+            $header++;
         }
-        return trim($buffer);
+
+        $headers = [];
+        foreach($head as $header) {
+            if ($header) {
+                $headers[]=$header;
+            }
+        }
+
+        return implode("\r\n", $headers);
     }
 
     public function getInfo(string $requestedRoute, Router $router) {
         $routes = $router->getRoutes();
-        $routesCount = $routes;
+        $routesCount = count($routes);
         for($i = 0; $i < $routesCount; $i++) {
             if($routes[$i]->getExposedRoute() == $requestedRoute) {
                 return [$routes[$i]->getContent(), $routes[$i]->getMime()];
             } else {
-                return false;
+                continue;
             }
         }
         return false;

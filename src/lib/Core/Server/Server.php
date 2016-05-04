@@ -15,7 +15,7 @@ class Server {
     private $router;
     private $args;
 
-    public function __construct(Router $router, string $ipAddress = "127.0.0.1", int $port = 15956) {
+    public function __construct(Router $router, string $ipAddress = "127.0.0.1", int $port = 2406) {
         $this->args = [$router, $ipAddress, $port];
 
         $this->router = $router;
@@ -79,6 +79,7 @@ class Server {
 
                     if(isset($ClientThread->response)) {
                         socket_write($client, $ClientThread->response);
+                        socket_close($client);
                     }
                 }
             }

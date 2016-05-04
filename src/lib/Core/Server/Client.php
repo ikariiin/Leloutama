@@ -16,12 +16,24 @@ class Client {
     protected $stringHeaders;
     private $config;
 
+    /**
+     * Client constructor.
+     * Constructs the Client instance.
+     * Needs the user defined router as the first argument, and the raw string headers separated by \r\n, as the second.
+     * @param Router $router
+     * @param $stringHeaders
+     */
     public function __construct(Router $router, $stringHeaders) {
         $this->router = $router;
         $this->stringHeaders = $stringHeaders;
         $this->http = new Http($stringHeaders);
     }
 
+    /**
+     * The public method to call to initialize the whole serving process.
+     * Returns the response as a string, which can be just socket_writ'en.
+     * @return string
+     */
     public function serve(): string {
         $this->http->Headerize();
         $this->http->parseHeaders();
@@ -32,38 +44,49 @@ class Client {
             $this->http->getMethod()
         );
 
-        $responseBody = $this->processBody();
+        $response = $this->process();
 
-        //var_dump($responseBody);
-        $headerOP = $this->createHeaders($responseBody[0], $responseBody[1]);
-
-        //var_dump($headerOP);
-
-        $responseBody = $headerOP[1];
-        $headers = $headerOP[0];
+        $responseHeaders = $response[0];
+        $responseBody = $response[1];
+        var_dump($response);
 
 
-        $finalPacket = $headers . "\r\n\r\n" . $responseBody;
+        $finalPacket = $responseHeaders . "\r\n\r\n" . $responseBody;
 
         //var_dump($finalPacket);
         return $finalPacket;
     }
 
-    private function processBody(): array {
+    /**
+     * Processes the router, gets the requested resource, creates the headers, and returns an array.
+     * If there is some error, it calls the methods to get the content, and also returns an array with the structure of
+     * [0] => headers, [1] => body
+     * @return array
+     */
+    private function process(): array {
         $getContent = $this->http->getInfo($this->http->getRequestedResource(), $this->router);
         $toServeContent = "";
+
         if(!$getContent) {
             $toServeContent = $this->get404();
-            return [$toServeContent, "text/html"];
+
+            $toServeContent = implode("\r\n", explode("\n", $toServeContent));
+
+            return $this->createHeaders($toServeContent, "text/html", "", 404);
         } elseif($this->http->getMethod() !== "GET") {
             $toServeContent = $this->get405();
-            return [$toServeContent, "text/html"];
+
+            $toServeContent = implode("\r\n", explode("\n", $toServeContent));
+
+            return $this->createHeaders($toServeContent, "text/html", "", 405);
         } else {
             $toServeContent = $getContent[0];
+            $toServeContent = implode("\r\n", explode("\n", $toServeContent));
         }
-        $toServeContent = implode("\r\n", explode("\n", $toServeContent));
-        return [$toServeContent, $getContent[1]];
+
+        return $this->createHeaders($toServeContent, $getContent[1]);
     }
+
 
     protected function get404(): string {
         $html404 = file_get_contents(__DIR__ . "/../Resources/400Errors.html");
