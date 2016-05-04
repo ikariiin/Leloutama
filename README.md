@@ -62,3 +62,26 @@ Currently running number of processes: 0
 ```
 
 That's it.
+
+## Why should you use it?
+* You love PHP, and wanna swag 'bout it.
+* You want to try something new.
+* Reply something to those guys, who tell that PHP is good for nothing.
+* Is open source ...
+
+## Drawbacks
+
+* Currently, doesn't have much features.
+* It codebase is un-documented.
+* Many HTTP header's are yet to be utilised.
+* No HTTP caching as of now.
+* No content encryption.
+
+## PR-s
+
+Feel free to PR something...
+I really look forward for your contribution.
+
+## Issues
+
+Currently, none, but is sure to be coming up, with further use.
