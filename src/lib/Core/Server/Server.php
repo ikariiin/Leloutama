@@ -44,6 +44,11 @@ class Server {
             if(!socket_listen($socket)) {
                 exit("Socket connection could not be initialized due to the error: " . socket_strerror(socket_last_error($socket)));
             }
+
+            printf("Server started successfully.\nListening on ip: %s at port: %d\n",
+                $args[1],
+                $args[2]
+            );
             while(($client = socket_accept($socket))) {
                 $http = new Http();
                 $stringHeaders = $http->parseRawSocketRequest($client);

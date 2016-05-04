@@ -48,7 +48,6 @@ class Client {
 
         $responseHeaders = $response[0];
         $responseBody = $response[1];
-        var_dump($response);
 
 
         $finalPacket = $responseHeaders . "\r\n\r\n" . $responseBody;
