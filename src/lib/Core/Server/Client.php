@@ -8,12 +8,18 @@
 
 namespace Leloutama\lib\Core\Server;
 require __DIR__ . "/Http.php";
+require __DIR__ . "/../Utility/Request.php";
 use Leloutama\lib\Core\Router\Router;
+use Leloutama\lib\Core\Utility\Request;
 
 class Client {
+    /* Protected Vars */
     protected $router;
     protected $http;
     protected $stringHeaders;
+    protected $request;
+
+    /* Private Vars */
     private $config;
 
     /**
@@ -38,6 +44,8 @@ class Client {
         $this->http->Headerize();
         $this->http->parseHeaders();
 
+        $this->buildRequest();
+
         printf("Request Recieved \n \t Time: %s \n \t Requested Resource: %s \n \t Method: %s \n",
             date("M d Y-H:i:s "),
             $this->http->getRequestedResource(),
@@ -56,6 +64,15 @@ class Client {
         return $finalPacket;
     }
 
+    protected function buildRequest() {
+        $cookies = $this->http->getCookies();
+        $requestedResource = $this->http->getRequestedResource();
+
+        $this->request = (new Request())
+            ->setCookies($cookies)
+            ->setRequestedResource($requestedResource);
+    }
+
     /**
      * Processes the router, gets the requested resource, creates the headers, and returns an array.
      * If there is some error, it calls the methods to get the content, and also returns an array with the structure of
@@ -63,27 +80,29 @@ class Client {
      * @return array
      */
     private function process(): array {
-        $getContent = $this->http->getInfo($this->http->getRequestedResource(), $this->router);
-        $toServeContent = "";
+        $response = $this->http->getInfo($this->http->getRequestedResource(), $this->router);
 
-        if(!$getContent) {
+        if(!$response) {
             $toServeContent = $this->get404();
 
-            $toServeContent = implode("\r\n", explode("\n", $toServeContent));
-
             return $this->createHeaders($toServeContent, "text/html", "", 404);
-        } elseif($this->http->getMethod() !== "GET") {
-            $toServeContent = $this->get405();
+        }
 
-            $toServeContent = implode("\r\n", explode("\n", $toServeContent));
+        $response->setRequest($this->request);
+
+        if($this->http->getMethod() !== "GET") {
+            $toServeContent = $this->get405();
 
             return $this->createHeaders($toServeContent, "text/html", "", 405);
         } else {
-            $toServeContent = $getContent[0];
-            $toServeContent = implode("\r\n", explode("\n", $toServeContent));
+            $toServeContent = $response->onReady();
         }
 
-        return $this->createHeaders($toServeContent, $getContent[1]);
+        return $this->createHeaders($toServeContent, $response->getMime());
+    }
+
+    protected function formatBody(string $body): string {
+        return implode("\r\n", explode("\n", $body));
     }
 
 
@@ -151,7 +170,7 @@ class Client {
         return [$headers, $content];
     }
 
-    private function encodeBody(string $body): array {
+    protected function encodeBody(string $body): array {
         $toReturn = [];
         if(in_array("gzip", $this->http->getAcceptedEncoding())) {
             $body = gzencode($body);

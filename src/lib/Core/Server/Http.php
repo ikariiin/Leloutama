@@ -70,7 +70,7 @@ class Http {
         $routesCount = count($routes);
         for($i = 0; $i < $routesCount; $i++) {
             if($routes[$i]->getExposedRoute() == $requestedRoute) {
-                return [$routes[$i]->getContent(), $routes[$i]->getMime()];
+                return $routes[$i]->getResponse();
             } else {
                 continue;
             }

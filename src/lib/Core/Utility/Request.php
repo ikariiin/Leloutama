@@ -9,7 +9,29 @@
 namespace Leloutama\lib\Core\Utility;
 
 
-class Request
-{
+class Request {
+    private $requestedResource;
+    private $cookies;
 
+    public function __construct() {
+        return $this;
+    }
+
+    public function setCookies(array $getVars): self {
+        $this->cookies = $getVars;
+        return $this;
+    }
+
+    public function setRequestedResource(string $requestedResource): self {
+        $this->requestedResource = $requestedResource;
+        return $this;
+    }
+
+    public function getCookies(): array {
+        return $this->cookies;
+    }
+
+    public function getRequestedResource(): string {
+        return $this->requestedResource;
+    }
 }

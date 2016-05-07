@@ -14,14 +14,12 @@ class Router {
     /**
      * Router, function for setting a route.
      * @param string $exposureNode
-     * @param string $content
-     * @param string $mime
+     * @param $response
      */
-    public function setRoute(string $exposureNode = "/*", string $content = "<h1>It works.</h1>", string $mime = "text/html") {
+    public function setRoute(string $exposureNode = "/*", $response) {
         $this->Routes[] = (new Nodes())
             ->setExposure($exposureNode)
-            ->setContent($content)
-            ->setMime($mime);
+            ->setResponse($response);
     }
 
     public function getRoutes(){

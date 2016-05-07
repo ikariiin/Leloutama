@@ -57,10 +57,6 @@ class Server {
                     $ClientThread = new ThreadDispatcher(function(array $arguments, &$_this){
                         $random = rand();
                         $uid = hash("gost", $random);
-
-                        printf("Started a new Client Thread with the uid: %s\n",
-                            $uid
-                        );
                         $client[$uid] = new Client($arguments[0], $arguments[1]);
 
                         $serveOP = $client[$uid]->serve();
@@ -69,12 +65,6 @@ class Server {
 
                             $client[$uid] = null;
                             unset($client[$uid]);
-                            printf("Closed the Client Thread with the uid: %s\n",
-                                $uid
-                            );
-                            printf("Currently running number of processes: %d\n",
-                                count($client)
-                            );
                         }
 
                         return false;

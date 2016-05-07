@@ -9,8 +9,7 @@ namespace Leloutama\lib\Core\Router;
 
 class Nodes {
     protected $expose;
-    protected $content;
-    protected $mime;
+    protected $response;
 
     /**
      * Constructor for providing an instance of self.
@@ -29,30 +28,16 @@ class Nodes {
         return $this;
     }
 
-    /**
-     * Sets the pointer, which identifies which file, to point to.
-     * @param string $content
-     * @return Nodes
-     */
-    public function setContent(string $content): self {
-        $this->content = $content;
+    public function setResponse($response): self {
+        $this->response = $response;
         return $this;
-    }
-
-    public function setMime(string $mime) {
-        $this->mime = $mime;
-        return $this;
-    }
-
-    public function getMime() {
-        return $this->mime;
     }
 
     public function getExposedRoute(): string {
         return $this->expose;
     }
 
-    public function getContent(): string {
-        return $this->content;
+    public function getResponse() {
+        return $this->response;
     }
 }
