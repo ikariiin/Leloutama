@@ -31,13 +31,17 @@ class Client {
      */
     public function __construct(Router $router, $stringHeaders) {
         $this->router = $router;
+
         $this->stringHeaders = $stringHeaders;
+
         $this->http = new Http($stringHeaders);
+
+        $this->config = json_decode(file_get_contents(__DIR__ . "/../../../config/Core/config.json"), true);
     }
 
     /**
      * The public method to call to initialize the whole serving process.
-     * Returns the response as a string, which can be just socket_writ'en.
+     * Returns the response as a string, which can be just socket_write'en.
      * @return string
      */
     public function serve(): string {
@@ -88,17 +92,19 @@ class Client {
             return $this->createHeaders($toServeContent, "text/html", "", 404);
         }
 
-        $response->setRequest($this->request);
+        $response->setRequest($this->request)->loadConfig($this->config);
 
         if($this->http->getMethod() !== "GET") {
             $toServeContent = $this->get405();
 
             return $this->createHeaders($toServeContent, "text/html", "", 405);
         } else {
-            $toServeContent = $response->onReady();
+            $responseChangeState = $response->onReady();
+            $toServeContent = $responseChangeState->getBody();
+            $responseStatus = $responseChangeState->getStatus();
         }
 
-        return $this->createHeaders($toServeContent, $response->getMime());
+        return $this->createHeaders($toServeContent, $response->getMime(), "", $responseStatus);
     }
 
     protected function formatBody(string $body): string {
@@ -112,7 +118,7 @@ class Client {
         $vars = array(
             "%error_code%" => "404",
             "%error_code_meaning%" => "Not Found",
-            "%error_description%" => "The requested resource was not found."
+            "%error_description%" => "The router was not configured to handle this route at all... So..."
         );
 
         $html404 = $this->replaceVarsInErrorPage($vars, $html404);

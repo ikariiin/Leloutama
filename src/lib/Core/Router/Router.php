@@ -16,7 +16,7 @@ class Router {
      * @param string $exposureNode
      * @param $response
      */
-    public function setRoute(string $exposureNode = "/*", $response) {
+    public function bind(string $exposureNode = "/*", $response) {
         $this->Routes[] = (new Nodes())
             ->setExposure($exposureNode)
             ->setResponse($response);

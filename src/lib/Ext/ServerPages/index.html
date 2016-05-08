@@ -37,6 +37,26 @@
             color: crimson;
             display: inline-block;
             padding: 3px;
+            font-size: 14px;
+            font-family: monospace;
+        }
+
+        hr {
+            width: 40%;
+            margin-top: 25px;
+        }
+
+        a {
+            color: #009688;
+            text-decoration: none;
+        }
+
+        a:hover {
+            text-decoration: underline;
+        }
+
+        a:visited {
+            color: #009688;
         }
     </style>
 </head>
@@ -53,5 +73,16 @@
 This html page can be found in here: <code>/path/to/Leloutama/src/lib/Ext/ServerPages/index.html</code>, and if you wish to edit it you
 can but it is rather recommended to create another file in the <code>DocumentRoot</code> directory, and create a router
 to point to it, and start the server.
+<hr color="#FFF" size="1px">
+<h2>Which router does it use?</h2>
+C'mon you should know the router, because you must have started the <code>cli/run.php</code> with those arguments, didn't you? Well, you
+know, so the router is most probably <code>/path/to/Leloutama/examples/router.example.php</code> unless you've done something clever ;-)
+<hr color="#FFF" size="1px">
+<h2>What's next?</h2>
+Create a router, invoke <code><span style="color: cornflowerblue">shit@shitty-pc</span> <span style="color: #49AF54">/path/to/Leloutama</span> <span style="color: #5418B3">$</span> php cli/run.php --host &lt;HOST_NAME&gt; --port &lt;YOUR_PORT&gt; --router &lt;/path/to/router.php&gt;</code>
+, and... PROFIT!
+<hr color="#FFF" size="1px">
+<h2>Have a problem?</h2>
+Contact me @ <a href="mailto:ping@gourab.me">ping@gourab.me</a> or open up a new issue in <a href="https://github.com/gourabnagDev/Leloutama/issues/new">the github repo</a>.
 </body>
 </html>

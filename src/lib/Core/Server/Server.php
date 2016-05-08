@@ -39,10 +39,10 @@ class Server {
         $webserverCallable = function(array $args) {
             $socket = socket_create(AF_INET, SOCK_STREAM, SOL_TCP);
             if(!socket_bind($socket, $args[1], $args[2])) {
-                exit("Socket connection could not be initialized due to the error: " . socket_strerror(socket_last_error($socket)));
+                exit("Socket connection could not be initialized due to the error: " . socket_strerror(socket_last_error($socket)) . "\n");
             }
             if(!socket_listen($socket)) {
-                exit("Socket connection could not be initialized due to the error: " . socket_strerror(socket_last_error($socket)));
+                exit("Socket connection could not be initialized due to the error: " . socket_strerror(socket_last_error($socket)) . "\n");
             }
 
             printf("Server started successfully.\nListening on ip: %s at port: %d\n",

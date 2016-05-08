@@ -8,13 +8,15 @@
 
 namespace Leloutama\lib\Core\Utility;
 abstract class AbstractResponse {
-    protected $body;
-    protected $mime;
+    protected $body = "";
+    protected $mime = "text/html";
     protected $fileName = "";
     protected $onReadyMethod;
     protected $onReadyMethodArgs;
+    protected $status = 200;
 
     private $request;
+    private $config;
 
     public function __construct() {
         return $this;
@@ -25,9 +27,10 @@ abstract class AbstractResponse {
         return $this;
     }
 
-    abstract public function setBody(array $body);
+    abstract public function setBody(string $body);
     abstract public function setMime(string $mime);
     abstract public function setFileName(string $fileName);
+    abstract public function setStatus(int $code);
 
     public function getBody(): string {
         return $this->body;
@@ -41,6 +44,10 @@ abstract class AbstractResponse {
         return $this->mime;
     }
 
+    public function getStatus(): int {
+        return $this->status;
+    }
+
     public function getRequest() {
         return $this->request;
     }
@@ -50,13 +57,22 @@ abstract class AbstractResponse {
         return $this;
     }
 
-    public function setOnReadyMethodArgs(array $arguments) {
+    public function setOnReadyMethodArgs($arguments) {
         $this->onReadyMethodArgs = $arguments;
         return $this;
     }
 
     public function onReady() {
         $this->{$this->onReadyMethod}($this->onReadyMethodArgs);
-        return $this->getBody();
+        return $this;
+    }
+
+    public function loadConfig(array $config) {
+        $this->config = $config;
+        return $this;
+    }
+
+    public function getConfig(string $key) {
+        return $this->config[$key];
     }
 }
