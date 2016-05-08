@@ -1,4 +1,10 @@
 <?php
+if (function_exists("cli_set_process_title")) {
+    @cli_set_process_title("aerys");
+}
+if(!extension_loaded("pthreads")) {
+    exit("You need the pthreads extension for running the extension.\n");
+}
 include __DIR__ . "/../autoloads/router.autoloads.php";
 require __DIR__ . "/../src/lib/Core/Server/Server.php";
 
