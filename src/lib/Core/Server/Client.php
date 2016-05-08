@@ -64,7 +64,6 @@ class Client {
 
         $finalPacket = $responseHeaders . "\r\n\r\n" . $responseBody;
 
-        //var_dump($finalPacket);
         return $finalPacket;
     }
 
@@ -110,7 +109,6 @@ class Client {
     protected function formatBody(string $body): string {
         return implode("\r\n", explode("\n", $body));
     }
-
 
     protected function get404(): string {
         $html404 = file_get_contents(__DIR__ . "/../Resources/400Errors.html");
@@ -161,16 +159,16 @@ class Client {
                 break;
         }
 
-        //$encodeOP = $this->encodeBody($content);
+        $encodeOP = $this->encodeBody($content);
 
         $headers[] = sprintf("Content-Type: %s", $mimeType);
 
-        $headers[] = sprintf("Content-Length: %d", strlen($content));
+        if(!empty($encodeOP)) {
+            $content = $encodeOP[0];
+            $headers[] = sprintf("Content-Encoding: %s", $encodeOP[1]);
+        }
 
-        //if(!empty($encodeOP)) {
-        //    $content = $encodeOP[0];
-        //    $headers[] = sprintf("Content-Encoding: %s", $encodeOP[1]);
-        //}
+        $headers[] = sprintf("Content-Length: %d", strlen($content));
 
         $headers = implode("\r\n", $headers);
         return [$headers, $content];

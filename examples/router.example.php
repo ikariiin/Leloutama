@@ -24,7 +24,7 @@ class Response extends \Leloutama\lib\Core\Utility\AbstractResponse {
     public function makeUp(string $fileName) {
         $this->setFileName($fileName);
 
-        $this->setMime(mime_content_type($fileName));
+        $this->setMime(mime_content_type($this->getConfig("docRoot") . $fileName));
 
         $this->setStatus(200);
 

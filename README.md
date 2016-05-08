@@ -50,36 +50,30 @@ And the final Response class might be something like this:
 
 ```
 class Response extends \Leloutama\lib\Core\Utility\AbstractResponse {
-    
-    // Overloading abstract method
     public function setBody(string $content): self {
         $this->body = $content;
         return $this;
     }
 
-    // Overloading abstract method
     public function setFileName(string $fileName): self {
         $this->fileName = $fileName;
         return $this;
     }
 
-    // Overloading abstract method
     public function setMime(string $mime): self {
         $this->mime = $mime;
         return $this;
     }
 
-    // Overloading abstract method 
     public function setStatus(int $code): self {
         $this->status = $code;
         return $this;
     }
 
-    // Method to call when the server recieves a request
     public function makeUp(string $fileName) {
         $this->setFileName($fileName);
 
-        $this->setMime(mime_content_type($fileName));
+        $this->setMime(mime_content_type($this->getConfig("docRoot") . $fileName));
 
         $this->setStatus(200);
 
