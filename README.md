@@ -136,6 +136,12 @@ Server started successfully.
 Listening on ip: {YOUR_CHOSEN_HOST} at port: {YOUR_CHOSEN_PORT}
 ```
 
+## Configurations
+
+The configurations for the server can be set in `/path/to/Leloutama/src/config/Core/config.json`.
+
+Psst. Currently only supporting, `docRoot`, i.e. `Document Root`.
+
 ## TODO
 * Implement doc-blocks (v1.2)
 * Implement an api for creating extensions (v1.1)
