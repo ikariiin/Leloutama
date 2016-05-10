@@ -160,7 +160,29 @@ TBD
 
 ## Bundled Ext Docs
 
-TBD
+**FileCheckr:**
+This extension can be used to safely load files from local storage.
+
+This extension is as minimal as it can possibly get.
+
+Methods Overview:
+After getting an instance of the class, a file can be loaded, by calling the method `load($fileName)` upon the object, where `$fileName` would contain the absolute path of the file to be loaded.
+If the file is not found, it loads an application error template.
+
+The data from the object can be got using the method `getData()`, which would return an array in the following format:
+
+```
+Array(
+    "body" => string,
+    "mime" => string,
+    "status" => int,
+    "fileName" => string
+)
+```
+
+Where `body` is the content to be served, `mime` is the mime type of the content being served, `status` is the HTTP status code of the response, and the `fileName` is the file name of the file, from which the content is being served.
+
+That data can be simply used in the response by using the method `$this->set($data)` in a method of the response class, where `$data` would be the return-ed data from `FileCheckr`.
 
 ## How to use the `cli/run.php`? or How to run the server?
 
@@ -206,7 +228,6 @@ The configurations for the extensions need to defined like:
 * Implement doc-blocks (v1.2)
 * Implement ServerExt (v1.2)
 * Implement HTTP Caching (v1.2)
-* Document `FileCheckr` (v1.1.1)
 * (...And more stuffs...)
 
 ## Why should you use it?
