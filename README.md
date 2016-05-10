@@ -186,6 +186,8 @@ That data can be simply used in the response by using the method `$this->set($da
 
 ## How to use the `cli/run.php`? or How to run the server?
 
+You can get the info about the options by by running the script with option `-h`.
+
 You need to specify three options, or you can omit `--host` and `--port`, which would be set to default if nothing is specified.
 
 The default for `host` is `127.0.0.1` and `port` is `9000`.
