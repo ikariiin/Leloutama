@@ -22,6 +22,55 @@ class Client {
     /* Private Vars */
     private $config;
 
+    const HTTP_REASON = [
+        100 => "Continue",
+        101 => "Switching Protocols",
+        200 => "OK",
+        201 => "Created",
+        202 => "Accepted",
+        203 => "Non-Authoritative Information",
+        204 => "No Content",
+        205 => "Reset Content",
+        206 => "Partial Content",
+        300 => "Multiple Choices",
+        301 => "Moved Permanently",
+        302 => "Found",
+        303 => "See Other",
+        304 => "Not Modified",
+        305 => "Use Proxy",
+        307 => "Temporary Redirect",
+        400 => "Bad Request",
+        401 => "Unauthorized",
+        402 => "Payment Required",
+        403 => "Forbidden",
+        404 => "Not Found",
+        405 => "Method Not Allowed",
+        406 => "Not Acceptable",
+        407 => "Proxy Authentication Required",
+        408 => "Request Timeout",
+        409 => "Conflict",
+        410 => "Gone",
+        411 => "Length Required",
+        412 => "Precondition Failed",
+        413 => "Request Entity Too Large",
+        414 => "Request URI Too Long",
+        415 => "Unsupported Media Type",
+        416 => "Requested Range Not Satisfiable",
+        417 => "Expectation Failed",
+        418 => "I'm A Teapot",
+        426 => "Upgrade Required",
+        428 => "Precondition Required",
+        429 => "Too Many Requests",
+        431 => "Request Header Fields Too Large",
+        500 => "Internal Server Error",
+        501 => "Not Implemented",
+        502 => "Bad Gateway",
+        503 => "Service Unavailable",
+        504 => "Gateway Timeout",
+        505 => "HTTP Version Not Supported",
+        511 => "Network Authentication Required",
+    ];
+
     /**
      * Client constructor.
      * Constructs the Client instance.
@@ -88,7 +137,7 @@ class Client {
         if(!$response) {
             $toServeContent = $this->get404();
 
-            return $this->createHeaders($toServeContent, "text/html", "", 404);
+            return $this->createHeaders($toServeContent, "text/html", 404, "");
         }
 
         $response->setRequest($this->request)->loadConfig($this->config);
@@ -96,14 +145,14 @@ class Client {
         if($this->http->getMethod() !== "GET") {
             $toServeContent = $this->get405();
 
-            return $this->createHeaders($toServeContent, "text/html", "", 405);
+            return $this->createHeaders($toServeContent, "text/html", 405, "");
         } else {
-            $responseChangeState = $response->onReady();
+            $responseChangeState = $response->onReady($response->getOnReadyMethodArgs());
             $toServeContent = $responseChangeState->getBody();
             $responseStatus = $responseChangeState->getStatus();
         }
 
-        return $this->createHeaders($toServeContent, $response->getMime(), "", $responseStatus);
+        return $this->createHeaders($toServeContent, $response->getMime(), $responseStatus,  "");
     }
 
     protected function formatBody(string $body): string {
@@ -145,19 +194,10 @@ class Client {
         return $content;
     }
 
-    private function createHeaders(string $content, string $mimeType, string $fileName = "", int $status = 200): array {
+    private function createHeaders(string $content, string $mimeType, int $status = 200, string $fileName = ""): array {
         $headers = [];
-        switch($status) {
-            case 200:
-                $headers[] = "HTTP/1.1 200 OK";
-                break;
-            case 404:
-                $headers[] = "HTTP/1.1 404 Not Found";
-                break;
-            case 405:
-                $headers[] = "HTTP/1.1 405 Method Not Supported";
-                break;
-        }
+
+        $headers[] = sprintf("HTTP/1.1 %d %s", $status, $this::HTTP_REASON[$status]);
 
         $encodeOP = $this->encodeBody($content);
 

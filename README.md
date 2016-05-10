@@ -36,41 +36,47 @@ see something like this:
 
 For creating a router instance, firstly, you need to extend an abstract class for sending an response to a request.
 
-You have to override the following methods:
+You have to override the `onClick` method. This method will be called when the server receives a request. And, that method _has to return `$this`_.
+
+You can use the methods:
 
 * setBody
 * setMime
 * setStatus
 * setFileName
 
-And have to declare a method which would be called by the server when an request comes... In the example router, that method is named
-`makeUp`...
+To make create the response.
 
-And the final Response class might be something like this:
+### Method Details
+
+* setBody:
+
+Will need the content you would serve for that route, as the argument
+
+* setMime:
+
+Needs the mime type of the file you are serving as the argument.
+
+* setStatus:
+
+Is used to set the HTTP status code of the response you are sending. Needs the status as an argument.
+
+* setFileName:
+
+Set the file name from which the content has been taken. Accepts the file name as an argument. And if you are not using
+any file at all, set the file name to an empty string.
+
+*This would be used for caching HTTP responses, which is currently not implemented.*
+
+---
+
+You can also use the method `defaultSet` to set all those things, which needs an array with the keys, `body` (needs to contain the content to serve), `mime`(needs to contain MIME type of the content which is being served), `status`(needs to contain status of the response being sent), `fileName` (needs to contain the file name of the file from which the content is being served, if any, set to an empty string).
+
+And the final Response class should be something like this:
 
 ```
 class Response extends \Leloutama\lib\Core\Utility\AbstractResponse {
-    public function setBody(string $content): self {
-        $this->body = $content;
-        return $this;
-    }
-
-    public function setFileName(string $fileName): self {
-        $this->fileName = $fileName;
-        return $this;
-    }
-
-    public function setMime(string $mime): self {
-        $this->mime = $mime;
-        return $this;
-    }
-
-    public function setStatus(int $code): self {
-        $this->status = $code;
-        return $this;
-    }
-
-    public function makeUp(string $fileName) {
+    public function onReady($fileName) {
         $this->setFileName($fileName);
 
         $this->setMime(mime_content_type($this->getConfig("docRoot") . $fileName));
@@ -80,6 +86,8 @@ class Response extends \Leloutama\lib\Core\Utility\AbstractResponse {
         $body = file_get_contents($this->getConfig("docRoot") . $fileName);
 
         $this->setBody($body);
+        
+        return $this;
     }
 }
 ```
@@ -92,19 +100,69 @@ $router = new \Leloutama\lib\Core\Router\Router();
 
 // Create a response, for maybe, the index page?
 $indexResponse = new Response();
-// Set the method
-$indexResponse->setOnReadyMethod("makeUp");
-// Set the argument
+
+// Set the arg by which the onReady method must be called
 $indexResponse->setOnReadyMethodArgs("index.html");
 
-// And lastly bind the exposure route and the response
+// And lastly, bind the exposure route and the response
 $router->bind("/", $indexResponse);
 
 // And make sure to return the router, or the server will throw a brick at your face
 return $router;
 ```
 
-## How to use the `cli/run.php`?
+## (NEW) Extensions
+
+There are two types of extensions, namely:
+
+* RouterExt (ClientExt)
+* ServerExt
+
+*Currently I have only implemented `RouterExt` or `ClientExt`.*
+
+### RouterExt (ClientExt)
+
+They are meant to be used within a response. An example, Ext has been bundled with the server, i.e. `FileCheckr` which, can be used to load files from local disk, and if it does not exist, instead of showing nothing to the user, it loads an `Application Error` Template.
+
+The API is really simple.
+
+There has to be an separate directory for all extensions, and must have an PHP Class named the Extension's name within that directory.
+
+Any which the Ext needs to use, must be kept in that directory.
+
+The Extension class needs to include and implement the interface `ClientExtension`.
+
+The Extension would be constructed with the `Request` and, the `Config` for that extension only.
+
+And the other things can be done independently by the extension.
+
+### How to use the RouterExt's
+
+For using any kind of extension in an response, you must call `initializeExtensionManager()` of the class.
+
+After that, in any method, use something like this:
+
+```
+$this->extensionManager->load($extName);
+```
+
+Where `$extName` would be the name of the ext we want to load.
+
+The above function call would return an instance of the ext, which can be used in further tasks.
+
+### ServerExt
+
+TBD
+
+### How to use ServerExt?
+
+TBD
+
+## Bundled Ext Docs
+
+TBD
+
+## How to use the `cli/run.php`? or How to run the server?
 
 You need to specify three options, or you can omit `--host` and `--port`, which would be set to default if nothing is specified.
 
@@ -134,11 +192,21 @@ Listening on ip: {YOUR_CHOSEN_HOST} at port: {YOUR_CHOSEN_PORT}
 
 The configurations for the server can be set in `/path/to/Leloutama/src/config/Core/config.json`.
 
-Psst. Currently only supporting, `docRoot`, i.e. `Document Root`.
+The configurations for the extensions need to defined like:
+
+```
+"Extensions": {
+  "ExtensionName": {
+    [... options ...]
+  }
+}
+```
 
 ## TODO
 * Implement doc-blocks (v1.2)
-* Implement an api for creating extensions (v1.1)
+* Implement ServerExt (v1.2)
+* Implement HTTP Caching (v1.2)
+* Document `FileCheckr` (v1.1.1)
 * (...And more stuffs...)
 
 ## Why should you use it?

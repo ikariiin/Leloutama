@@ -1,6 +1,8 @@
-<html>
+<!DOCTYPE html>
+<html lang="en">
 <head>
-    <title>%error_code% %error_code_meaning%</title>
+    <meta charset="UTF-8">
+    <title>Application Error</title>
     <style>
         * {
             transition: 0.4s all;
@@ -23,13 +25,11 @@
 
         header {
             width: 100%;
-            border-bottom: 2px solid #161616;
+            border-bottom: 2px solid #FFFFFF;
             text-align: center;
             font-size: 35px;
-            font-weight: 800;
             height: 20%;
-            line-height: 140px;
-            font-family: monospace;
+            line-height: 110px;
         }
 
         div.content {
@@ -69,17 +69,12 @@
 </head>
 <body>
 <header>
-    %error_code% %error_code_meaning%
+    There was an error in the application.
 </header>
 <div class="content">
-    <h1 style="font-size: 50px; font-family: monospace;">%error_code%</h1>
-    Well, this is awkward...<br />
-    %error_description%<br />
-    Rest assured, we would take care of it quickly!
-    <br />
-    <br />
-    <br />
-    An Server Running <a href="https://github.com/gourabnagDev/Leloutama" target="_blank">Leloutama</a>
+    <h1>Application Error</h1>
+    The file which was supposed to be served by the application,<br />
+    was not found on the disk.<br />
 </div>
 </body>
 </html>

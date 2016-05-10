@@ -1,3 +1,9 @@
 {
-  "docRoot": "/home/gourab/Desktop/Leloutama/src/lib/Ext/ServerPages/"
+  "docRoot": "/home/gourab/Desktop/Leloutama/ServerPages/",
+  "Extensions": {
+    "FileCheckr": {
+      "debug": true,
+      "error-page": "default"
+    }
+  }
 }

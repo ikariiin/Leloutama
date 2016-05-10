@@ -7,6 +7,9 @@
  */
 
 namespace Leloutama\lib\Core\Utility;
+
+include "ClientExtensionManager.php";
+
 abstract class AbstractResponse {
     protected $body = "";
     protected $mime = "text/html";
@@ -14,6 +17,7 @@ abstract class AbstractResponse {
     protected $onReadyMethod;
     protected $onReadyMethodArgs;
     protected $status = 200;
+    protected $extensionManager;
 
     private $request;
     private $config;
@@ -22,15 +26,32 @@ abstract class AbstractResponse {
         return $this;
     }
 
+    abstract public function onReady($arguments);
+
+    public function initializeExtensionManager() {
+        $this->extensionManager = new ClientExtensionManager($this->request, $this->config);
+    }
+
     public function setRequest(Request $request) {
         $this->request = $request;
         return $this;
     }
 
-    abstract public function setBody(string $body);
-    abstract public function setMime(string $mime);
-    abstract public function setFileName(string $fileName);
-    abstract public function setStatus(int $code);
+    public function setBody(string $body){
+        $this->body = $body;
+    }
+
+    public function setMime(string $mime) {
+        $this->mime = $mime;
+    }
+
+    public function setFileName(string $fileName) {
+        $this->fileName = $fileName;
+    }
+
+    public function setStatus(int $code) {
+        $this->status = $code;
+    }
 
     public function getBody(): string {
         return $this->body;
@@ -52,19 +73,13 @@ abstract class AbstractResponse {
         return $this->request;
     }
 
-    public function setOnReadyMethod(string $method) {
-        $this->onReadyMethod = $method;
-        return $this;
-    }
-
     public function setOnReadyMethodArgs($arguments) {
         $this->onReadyMethodArgs = $arguments;
         return $this;
     }
 
-    public function onReady() {
-        $this->{$this->onReadyMethod}($this->onReadyMethodArgs);
-        return $this;
+    public function getOnReadyMethodArgs() {
+        return $this->onReadyMethodArgs;
     }
 
     public function loadConfig(array $config) {
@@ -74,5 +89,19 @@ abstract class AbstractResponse {
 
     public function getConfig(string $key) {
         return $this->config[$key];
+    }
+
+    public function set(array $data) {
+        $body = $data["body"];
+        $status = $data["status"];
+        $fileName = $data["fileName"];
+        $mime = $data["mime"];
+
+        $this->setBody($body);
+        $this->setStatus($status);
+        $this->setFileName($fileName);
+        $this->setMime($mime);
+
+        return true;
     }
 }
