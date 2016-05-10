@@ -172,7 +172,7 @@ But make sure to specify `--router`, which would require the name of the file yo
 Like:
 
 ```
-$ php cli/run.php --router example/router.example.php
+$ php cli/run.php --router example/router.example.php 
 ```
 
 And the host and the port can also be defined, like:
