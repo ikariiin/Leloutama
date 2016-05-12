@@ -20,7 +20,7 @@ class Response extends \Leloutama\lib\Core\Utility\AbstractResponse {
 $router = new \Leloutama\lib\Core\Router\Router();
 
 $indexResponse = new Response();
-$indexResponse->setOnReadyMethodArgs("index.html");
+$indexResponse->setOnReadyMethodArgs("/index.html");
 
 $router->bind("/", $indexResponse);
 

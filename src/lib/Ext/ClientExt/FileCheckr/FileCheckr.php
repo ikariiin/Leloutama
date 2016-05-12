@@ -6,9 +6,9 @@
  * Time: 6:12 PM
  */
 
-namespace Leloutama\lib\Ext\RouterExt\FileCheckr;
+namespace Leloutama\lib\Ext\ClientExt\FileCheckr;
 
-include_once __DIR__ . "/../../ClientExtension.php";
+include_once __DIR__ . "/../ClientExtension.php";
 
 use Leloutama\lib\Core\Utility\Request;
 use Leloutama\lib\Ext\ClientExtension;

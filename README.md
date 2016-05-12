@@ -111,16 +111,14 @@ $router->bind("/", $indexResponse);
 return $router;
 ```
 
-## (NEW) Extensions
+## Extensions
 
 There are two types of extensions, namely:
 
-* RouterExt (ClientExt)
+* ClientExt
 * ServerExt
 
-*Currently I have only implemented `RouterExt` or `ClientExt`.*
-
-### RouterExt (ClientExt)
+### ClientExt
 
 They are meant to be used within a response. An example, Ext has been bundled with the server, i.e. `FileCheckr` which, can be used to load files from local disk, and if it does not exist, instead of showing nothing to the user, it loads an `Application Error` Template.
 
@@ -152,11 +150,107 @@ The above function call would return an instance of the ext, which can be used i
 
 ### ServerExt
 
-TBD
+The Server Extensions should be stored under the directory, `/path/to/Leloutama/src/lib/Ext/ServerExt/`.
 
-### How to use ServerExt?
+As the Client Extensions, each server extension should also have a directory, and the main class, and all the resources, inside it.
 
-TBD
+Every ServerExt has to include and implement the interface `ServerExtension`, which is basically, this:
+
+```
+interface ServerExtension {
+    public function __construct(array $configuration, string $docRoot);
+
+    public function beforeConstruct(Router $router, string $stringHeaders);
+
+    public function afterRequestBuild(Request $request, Http $http);
+
+    public function beforeHeaderCreationCall(string $content, string $mime, int $status, string $fileName);
+    
+    public function afterHeaderCreation(array $headers, string $content, string $mime, int $status, string $fileName);
+
+    public function beforeFinalServe(array $headAndBody);
+}
+```
+
+The server extension must define all of the functions above.
+
+If the extension doesn't want to return anything, it **has to return null**.
+
+Every extension is constructed with the following arguments:
+
+* Configuration for that specific ext (1st arg)
+* The Document root (2nd arg)
+
+### Method Details
+
+* #### beforeConstruct -
+This method is called just after initializing the extensions. It is called with the `Router` and the HTTP Headers in a string, as the arguments.
+
+It needs to return an array in the format:
+
+```
+Array (
+    "router" => Router <The router object, which the extension may or may not modify>,
+    "stringHeaders" => "{HEADERS}" <The raw string headers which were reecieved>
+)
+```
+
+Or `null` if the extension doesn't want the server to trigger anything.
+
+And the server will modify the internal values accordingly.
+
+* #### afterRequestBuild -
+This method is called after the request is set in the server. It is called with the arguments, `Request` holding the Request object, and the `Http` instance of the server.
+
+Should return the `Request` after doing any modification.
+
+Or `null` if the extension doesn't want the server to trigger anything.
+
+* #### beforeHeaderCreationCall -
+This method is called before the call to the method where the headers are created according to the content, status, mime, etc. etc. The arguments passed to it are: `$content` (i.e. The content which is to be sent to the client by the server), `$mime` (i.e. The mime type of the content that is being sent to the server), `$status` (i.e. The status of the response being sent to the client), `$fileName` (i.e. file name of teh file from which, the content being served, was taken from)(The file name can be an empty string, if the file name is empty, you should not change it).
+
+Should return an array structured like:
+
+```
+Array (
+    "content" => $content <The content to be served>,
+    "mime" => $miem <The mime type of the content being served>,
+    "status" => $status <The status code of the response being sent>,
+    "fileName" => $fileName <The FileName of the file, from which the content was taken from>
+)
+```
+
+Or `null` if the extension the extension doesn't want the server to trigger anything.
+
+#### afterHeaderCreation -
+This method is called after the headers has been created. It is called with the arguments, `$headers` (i.e. The array which contains the headers)(If any header is to be added, it needs to be done in this way: `$header[] = "Header: Header Value"`),`$content` (i.e. The content which is to be sent to the client by the server), `$mime` (i.e. The mime type of the content that is being sent to the server), `$status` (i.e. The status of the response being sent to the client), `$fileName` (i.e. file name of teh file from which, the content being served, was taken from)(The file name can be an empty string, if the file name is empty, you should not change it).
+
+Should return the `$headers` array.
+
+If the extension doesn't want the server to trigger anything, it should return `null`.
+
+#### beforeFinalServe -
+
+This method is called just before serving the pages, and is supplied with an array consisting of the header and body, as the argument.
+
+Should return an array in the format:
+
+```
+Array (
+    0 => $header <The Headers>
+    1 => $body <The Body>
+)
+```
+
+And should return `null`, if the extension doesn't want the server to trigger anything.
+
+### How to use ServerExts?
+
+While creating the server instance, an array has to be passed as the second argument like:
+
+```
+$server = new \Leloutama\lib\Core\Server\Server($router, ["ServerExt1", "ServerExt2"], $host, $port);
+```
 
 ## Bundled Ext Docs
 
@@ -184,6 +278,26 @@ Where `body` is the content to be served, `mime` is the mime type of the content
 
 That data can be simply used in the response by using the method `$this->set($data)` in a method of the response class, where `$data` would be the return-ed data from `FileCheckr`.
 
+**ErrorDocuments:**
+
+Specify some custom error documents for some specific error.
+
+You need to specify error document for each error code like this:
+
+```
+"{ERROR_CODE}": "{ABSOLUTE_PATH_TO_CONTENT}"
+```
+
+Under the `ErrorDocuments`' config.
+
+An exemplary error doc is already set up, that is, this:
+
+```
+"404": "%docRoot%/404.html"
+```
+
+You can use the variable `%docRoot%` for the absolute path of the content. `%docRoot%` simply resolves to the defined `docRoot` in the config file.
+
 ## How to use the `cli/run.php`? or How to run the server?
 
 You can get the info about the options by by running the script with option `-h`.
@@ -204,6 +318,14 @@ And the host and the port can also be defined, like:
 ```
 $ php cli/run.php --host 127.0.0.2 --port 7005 --router example/router.example.php
 ```
+
+Server Extensions can be specified like:
+
+```
+$ php cli/run.php --server-ext ServerExt1,ServerExt2 --router router.example.php
+```
+
+*If multiple extension is to be loaded, each extension has to be separated by an, ',' ONLY.*
 
 Which would present with an output similar to this:
 
@@ -228,7 +350,6 @@ The configurations for the extensions need to defined like:
 
 ## TODO
 * Implement doc-blocks (v1.2)
-* Implement ServerExt (v1.2)
 * Implement HTTP Caching (v1.2)
 * (...And more stuffs...)
 

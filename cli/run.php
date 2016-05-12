@@ -14,11 +14,14 @@ $port = 9000;
 
 $router = new \Leloutama\lib\Core\Router\Router();
 
+$exts = [];
+
 $shortOptions = "h";
 $longOptions = [
     "host:",
     "port:",
-    "router:"
+    "router:",
+    "server-ext:"
 ];
 
 $help = <<<HELP
@@ -37,6 +40,7 @@ Options:
 --host                  Specify the host from which the server has to listen.
 --port                  Specify the port of the host, which the server will listen from.
 --router                Specify the absolute/relative path of the router file.
+--server-ext            Specify the Server Ext's to use. Each should be separated by a comma ','.
 -h                      Display this help text.
 
 
@@ -45,7 +49,11 @@ HELP;
 $options = getopt($shortOptions, $longOptions);
 
 if(isset($options["h"])) {
-    echo $help;
+    exit($help);
+}
+
+if(isset($options["server-ext"]) && $options["server-ext"]) {
+    $exts = explode(",", $options["server-ext"]);
 }
 
 if(isset($options["host"]) && $options["host"]) {
@@ -60,6 +68,6 @@ if(isset($options["router"]) && $options["router"]) {
     $router = require($options["router"]);
 }
 
-$server = new \Leloutama\lib\Core\Server\Server($router, $host, $port);
+$server = new \Leloutama\lib\Core\Server\Server($router, $exts, $host, $port);
 
 $server->startServer();

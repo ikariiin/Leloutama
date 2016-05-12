@@ -15,8 +15,8 @@ class Server {
     private $router;
     private $args;
 
-    public function __construct(Router $router, string $ipAddress = "127.0.0.1", int $port = 2406) {
-        $this->args = [$router, $ipAddress, $port];
+    public function __construct(Router $router, array $exts = [], string $ipAddress = "127.0.0.1", int $port = 2406) {
+        $this->args = [$router, $exts ,$ipAddress, $port];
 
         $this->router = $router;
     }
@@ -38,7 +38,7 @@ class Server {
     private function dispatchMainThread(): callable {
         $webserverCallable = function(array $args) {
             $socket = socket_create(AF_INET, SOCK_STREAM, SOL_TCP);
-            if(!socket_bind($socket, $args[1], $args[2])) {
+            if(!socket_bind($socket, $args[2], $args[3])) {
                 exit("Socket connection could not be initialized due to the error: " . socket_strerror(socket_last_error($socket)) . "\n");
             }
             if(!socket_listen($socket)) {
@@ -46,8 +46,8 @@ class Server {
             }
 
             printf("Server started successfully.\nListening on ip: %s at port: %d\n",
-                $args[1],
-                $args[2]
+                $args[2],
+                $args[3]
             );
             while(($client = socket_accept($socket))) {
                 $http = new Http();
@@ -57,7 +57,7 @@ class Server {
                     $ClientThread = new ThreadDispatcher(function(array $arguments, &$_this){
                         $random = rand();
                         $uid = hash("gost", $random);
-                        $client[$uid] = new Client($arguments[0], $arguments[1]);
+                        $client[$uid] = new Client($arguments[0], $arguments[1] , $arguments[2]);
 
                         $serveOP = $client[$uid]->serve();
                         if(!empty($serveOP)) {
@@ -68,7 +68,7 @@ class Server {
                         }
 
                         return false;
-                    }, [$args[0], $stringHeaders]);
+                    }, [$args[0], $args[1] ,$stringHeaders]);
 
                     $ClientThread->run();
 

@@ -9,8 +9,10 @@
 namespace Leloutama\lib\Core\Server;
 require __DIR__ . "/Http.php";
 require __DIR__ . "/../Utility/Request.php";
+require  __DIR__ . "/../Utility/ServerExtensionManager.php";
 use Leloutama\lib\Core\Router\Router;
 use Leloutama\lib\Core\Utility\Request;
+use Leloutama\lib\Core\Utility\ServerExtensionManager;
 
 class Client {
     /* Protected Vars */
@@ -21,71 +23,44 @@ class Client {
 
     /* Private Vars */
     private $config;
+    private $exts;
+    private $extManager;
+    private $extInstances;
 
-    const HTTP_REASON = [
-        100 => "Continue",
-        101 => "Switching Protocols",
-        200 => "OK",
-        201 => "Created",
-        202 => "Accepted",
-        203 => "Non-Authoritative Information",
-        204 => "No Content",
-        205 => "Reset Content",
-        206 => "Partial Content",
-        300 => "Multiple Choices",
-        301 => "Moved Permanently",
-        302 => "Found",
-        303 => "See Other",
-        304 => "Not Modified",
-        305 => "Use Proxy",
-        307 => "Temporary Redirect",
-        400 => "Bad Request",
-        401 => "Unauthorized",
-        402 => "Payment Required",
-        403 => "Forbidden",
-        404 => "Not Found",
-        405 => "Method Not Allowed",
-        406 => "Not Acceptable",
-        407 => "Proxy Authentication Required",
-        408 => "Request Timeout",
-        409 => "Conflict",
-        410 => "Gone",
-        411 => "Length Required",
-        412 => "Precondition Failed",
-        413 => "Request Entity Too Large",
-        414 => "Request URI Too Long",
-        415 => "Unsupported Media Type",
-        416 => "Requested Range Not Satisfiable",
-        417 => "Expectation Failed",
-        418 => "I'm A Teapot",
-        426 => "Upgrade Required",
-        428 => "Precondition Required",
-        429 => "Too Many Requests",
-        431 => "Request Header Fields Too Large",
-        500 => "Internal Server Error",
-        501 => "Not Implemented",
-        502 => "Bad Gateway",
-        503 => "Service Unavailable",
-        504 => "Gateway Timeout",
-        505 => "HTTP Version Not Supported",
-        511 => "Network Authentication Required",
-    ];
+    /* Constants */
+    const SERVER_NAME = "Leloutama";
 
     /**
      * Client constructor.
      * Constructs the Client instance.
      * Needs the user defined router as the first argument, and the raw string headers separated by \r\n, as the second.
      * @param Router $router
+     * @param array $exts
      * @param $stringHeaders
      */
-    public function __construct(Router $router, $stringHeaders) {
+    public function __construct(Router $router, array $exts, string $stringHeaders) {
+        $this->config = json_decode(file_get_contents(__DIR__ . "/../../../config/Core/config.json"), true);
+
+        $this->exts = $exts;
+        $this->extManager = new ServerExtensionManager($this->config);
+
+        $this->extInstances = $extInstances = $this->loadExt($exts);
+
+        foreach($this->extInstances as $ext) {
+            $beforeConstruct = $ext->beforeConstruct($router, $stringHeaders);
+
+            if($beforeConstruct !== null) {
+                $router = $beforeConstruct["rotuer"];
+
+                $stringHeaders = $beforeConstruct["stringHeaders"];
+            }
+        }
+
         $this->router = $router;
 
         $this->stringHeaders = $stringHeaders;
 
         $this->http = new Http($stringHeaders);
-
-        $this->config = json_decode(file_get_contents(__DIR__ . "/../../../config/Core/config.json"), true);
     }
 
     /**
@@ -107,6 +82,14 @@ class Client {
 
         $response = $this->process();
 
+        foreach ($this->extInstances as $ext) {
+            $extFinalServeOp = $ext->beforeFinalServe($response);
+
+            if($extFinalServeOp !== null) {
+                $response = $extFinalServeOp;
+            }
+        }
+
         $responseHeaders = $response[0];
         $responseBody = $response[1];
 
@@ -123,6 +106,14 @@ class Client {
         $this->request = (new Request())
             ->setCookies($cookies)
             ->setRequestedResource($requestedResource);
+
+        foreach ($this->extInstances as $ext) {
+            $extAfterRequestBuild = $ext->afterRequestBuild($this->request, $this->http);
+
+            if($extAfterRequestBuild !== null) {
+                $this->request = $extAfterRequestBuild;
+            }
+        }
     }
 
     /**
@@ -136,23 +127,37 @@ class Client {
 
         if(!$response) {
             $toServeContent = $this->get404();
-
-            return $this->createHeaders($toServeContent, "text/html", 404, "");
-        }
-
-        $response->setRequest($this->request)->loadConfig($this->config);
-
-        if($this->http->getMethod() !== "GET") {
+            $mime = "text/html";
+            $status = 404;
+            $fileName = "";
+        } elseif($this->http->getMethod() !== "GET") {
             $toServeContent = $this->get405();
-
-            return $this->createHeaders($toServeContent, "text/html", 405, "");
+            $mime = "text/html";
+            $status = 405;
+            $fileName = "";
         } else {
-            $responseChangeState = $response->onReady($response->getOnReadyMethodArgs());
-            $toServeContent = $responseChangeState->getBody();
-            $responseStatus = $responseChangeState->getStatus();
+            $response->setRequest($this->request)->loadConfig($this->config);
+
+            $response->onReady($response->getOnReadyMethodArgs());
+
+            $toServeContent = $response->getBody();
+            $status = $response->getStatus();
+            $fileName = $response->getFileName();
+            $mime = $response->getMime();
         }
 
-        return $this->createHeaders($toServeContent, $response->getMime(), $responseStatus,  "");
+        foreach($this->extInstances as $ext) {
+            $extBeforeHeaderCreationCall = $ext->beforeHeaderCreationCall($toServeContent, $mime, $status, $fileName);
+
+            if($extBeforeHeaderCreationCall !== null) {
+                $toServeContent = $extBeforeHeaderCreationCall["content"];
+                $mime = $extBeforeHeaderCreationCall["mime"];
+                $status = $extBeforeHeaderCreationCall["status"];
+                $fileName = $extBeforeHeaderCreationCall["fileName"];
+            }
+        }
+
+        return $this->createHeaders($toServeContent, $mime, $status,  $fileName);
     }
 
     protected function formatBody(string $body): string {
@@ -197,7 +202,7 @@ class Client {
     private function createHeaders(string $content, string $mimeType, int $status = 200, string $fileName = ""): array {
         $headers = [];
 
-        $headers[] = sprintf("HTTP/1.1 %d %s", $status, $this::HTTP_REASON[$status]);
+        $headers[] = sprintf("HTTP/1.1 %d %s", $status, $this->http->HTTP_REASON[$status]);
 
         $encodeOP = $this->encodeBody($content);
 
@@ -209,6 +214,16 @@ class Client {
         }
 
         $headers[] = sprintf("Content-Length: %d", strlen($content));
+
+        $headers[] = sprintf("X-Powered-By: %s", self::SERVER_NAME);
+
+        foreach($this->extInstances as $ext) {
+            $extAfterHeaderCreation = $ext->afterHeaderCreation($headers, $content, $mimeType, $status, $fileName);
+
+            if($extAfterHeaderCreation !== null) {
+                $headers = $extAfterHeaderCreation;
+            }
+        }
 
         $headers = implode("\r\n", $headers);
         return [$headers, $content];
@@ -225,5 +240,22 @@ class Client {
         }
 
         return $toReturn;
+    }
+
+    private function loadExt(array $exts) {
+        $extCount = count($exts);
+        $extensionsBundle = [];
+        for($i = 0; $i < $extCount; $i++) {
+            $extName = $exts[$i];
+            try {
+                $extensionsBundle[$extName] = $this->extManager->load($extName);
+            } catch(\Exception $ex) {
+                printf("Couldn't load the extension %s, because of the reason - %s.\nContinuing without loading it.\n",
+                    $extName,
+                    $ex->getMessage()
+                );
+            }
+        }
+        return $extensionsBundle;
     }
 }
