@@ -183,7 +183,7 @@ Every extension is constructed with the following arguments:
 
 ### Method Details
 
-* #### beforeConstruct -
+#### beforeConstruct -
 This method is called just after initializing the extensions. It is called with the `Router` and the HTTP Headers in a string, as the arguments.
 
 It needs to return an array in the format:
@@ -199,14 +199,14 @@ Or `null` if the extension doesn't want the server to trigger anything.
 
 And the server will modify the internal values accordingly.
 
-* #### afterRequestBuild -
+#### afterRequestBuild -
 This method is called after the request is set in the server. It is called with the arguments, `Request` holding the Request object, and the `Http` instance of the server.
 
 Should return the `Request` after doing any modification.
 
 Or `null` if the extension doesn't want the server to trigger anything.
 
-* #### beforeHeaderCreationCall -
+#### beforeHeaderCreationCall -
 This method is called before the call to the method where the headers are created according to the content, status, mime, etc. etc. The arguments passed to it are: `$content` (i.e. The content which is to be sent to the client by the server), `$mime` (i.e. The mime type of the content that is being sent to the server), `$status` (i.e. The status of the response being sent to the client), `$fileName` (i.e. file name of teh file from which, the content being served, was taken from)(The file name can be an empty string, if the file name is empty, you should not change it).
 
 Should return an array structured like:
