@@ -43,7 +43,6 @@ You can use the methods:
 * setBody
 * setMime
 * setStatus
-* setFileName
 
 To make create the response.
 
@@ -61,13 +60,6 @@ Needs the mime type of the file you are serving as the argument.
 
 Is used to set the HTTP status code of the response you are sending. Needs the status as an argument.
 
-* setFileName:
-
-Set the file name from which the content has been taken. Accepts the file name as an argument. And if you are not using
-any file at all, set the file name to an empty string.
-
-*This would be used for caching HTTP responses, which is currently not implemented.*
-
 ---
 
 You can also use the method `defaultSet` to set all those things, which needs an array with the keys, `body` (needs to contain the content to serve), `mime`(needs to contain MIME type of the content which is being served), `status`(needs to contain status of the response being sent), `fileName` (needs to contain the file name of the file from which the content is being served, if any, set to an empty string).
@@ -77,7 +69,6 @@ And the final Response class should be something like this:
 ```
 class Response extends \Leloutama\lib\Core\Utility\AbstractResponse {
     public function onReady($fileName) {
-        $this->setFileName($fileName);
 
         $this->setMime(mime_content_type($this->getConfig("docRoot") . $fileName));
 
