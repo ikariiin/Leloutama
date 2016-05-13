@@ -124,40 +124,50 @@ class Client {
      */
     private function process(): array {
         $response = $this->http->getInfo($this->http->getRequestedResource(), $this->router);
-
         if(!$response) {
             $toServeContent = $this->get404();
             $mime = "text/html";
             $status = 404;
-            $fileName = "";
-        } elseif($this->http->getMethod() !== "GET") {
-            $toServeContent = $this->get405();
-            $mime = "text/html";
-            $status = 405;
-            $fileName = "";
         } else {
-            $response->setRequest($this->request)->loadConfig($this->config);
+            if($this->http->getMethod() !== "GET") {
+                $toServeContent = $this->get405();
+                $mime = "text/html";
+                if(sprintf('"%d"', $this->http->getEtag($this->encodeBody($this->get405())[0])) == $this->http->getHeaderParam("If-None-Match")){
+                    $status = 304;
+                } else {
+                    $status = 405;
+                }
+            } else {
+                $response->setRequest($this->request)->loadConfig($this->config);
 
-            $response->onReady($response->getOnReadyMethodArgs());
+                $response->onReady($response->getOnReadyMethodArgs());
 
-            $toServeContent = $response->getBody();
-            $status = $response->getStatus();
-            $fileName = $response->getFileName();
-            $mime = $response->getMime();
+                if(sprintf('"%d"', $this->http->getEtag($this->encodeBody($response->getBody())[0])) == $this->http->getHeaderParam("If-None-Match")){
+                    $toServeContent = $response->getBody();
+                    $status = 304;
+                    $mime = $response->getMime();
+                } else {
+                    var_dump($response);
+                    $toServeContent = $response->getBody();
+                    $status = $response->getStatus();
+                    $mime = $response->getMime();
+                }
+            }
         }
 
         foreach($this->extInstances as $ext) {
-            $extBeforeHeaderCreationCall = $ext->beforeHeaderCreationCall($toServeContent, $mime, $status, $fileName);
+            $extBeforeHeaderCreationCall = $ext->beforeHeaderCreationCall($toServeContent, $mime, $status);
 
             if($extBeforeHeaderCreationCall !== null) {
                 $toServeContent = $extBeforeHeaderCreationCall["content"];
                 $mime = $extBeforeHeaderCreationCall["mime"];
                 $status = $extBeforeHeaderCreationCall["status"];
-                $fileName = $extBeforeHeaderCreationCall["fileName"];
             }
         }
 
-        return $this->createHeaders($toServeContent, $mime, $status,  $fileName);
+        var_dump($toServeContent);
+
+        return $this->createHeaders($toServeContent, $mime, $status);
     }
 
     protected function formatBody(string $body): string {
@@ -199,7 +209,7 @@ class Client {
         return $content;
     }
 
-    private function createHeaders(string $content, string $mimeType, int $status = 200, string $fileName = ""): array {
+    private function createHeaders(string $content, string $mimeType, int $status = 200): array {
         $headers = [];
 
         $headers[] = sprintf("HTTP/1.1 %d %s", $status, $this->http->HTTP_REASON[$status]);
@@ -215,14 +225,22 @@ class Client {
 
         $headers[] = sprintf("Content-Length: %d", strlen($content));
 
+        $this->createCacheHeaders($this->http->getEtag($content), $headers);
+
         $headers[] = sprintf("X-Powered-By: %s", self::SERVER_NAME);
 
         foreach($this->extInstances as $ext) {
-            $extAfterHeaderCreation = $ext->afterHeaderCreation($headers, $content, $mimeType, $status, $fileName);
+            $extAfterHeaderCreation = $ext->afterHeaderCreation($headers, $content, $mimeType, $status);
 
             if($extAfterHeaderCreation !== null) {
                 $headers = $extAfterHeaderCreation;
             }
+        }
+
+        $this->logResponse(sprintf("%d %s", $status, $this->http->HTTP_REASON[$status]));
+
+        if($status === 304) {
+            $content = "";
         }
 
         $headers = implode("\r\n", $headers);
@@ -257,5 +275,20 @@ class Client {
             }
         }
         return $extensionsBundle;
+    }
+
+    private function createCacheHeaders(string $etag, array &$headers) {
+        $headers[] = sprintf('Cache-Control: %s, max-age=%d',
+            $this->config["Cache-Config"]["scope"],
+            $this->config["Cache-Config"]["max-age"]
+        );
+        $headers[] = sprintf('Etag: "%s"', $etag);
+    }
+
+    protected function logResponse(string $status) {
+        printf("Response Sent\n \t For Resource: %s\n \t Status: %s\n",
+            $this->http->getRequestedResource(),
+            $status
+        );
     }
 }

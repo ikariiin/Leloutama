@@ -19,9 +19,9 @@ interface ServerExtension {
 
     public function afterRequestBuild(Request $request, Http $http);
 
-    public function beforeHeaderCreationCall(string $content, string $mime, int $status, string $fileName);
+    public function beforeHeaderCreationCall(string $content, string $mime, int $status);
 
-    public function afterHeaderCreation(array $headers, string $content, string $mime, int $status, string $fileName);
+    public function afterHeaderCreation(array $headers, string $content, string $mime, int $status);
 
     public function beforeFinalServe(array $headAndBody);
 }

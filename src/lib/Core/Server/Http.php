@@ -147,7 +147,11 @@ class Http {
     }
 
     public function getHeaderParam(string $param): string {
-        return $this->parsedHeaders[$param];
+        if(isset($this->parsedHeaders[$param])) {
+            return $this->parsedHeaders[$param];
+        } else {
+            return "";
+        }
     }
 
     public function getAcceptedEncoding(): array {
@@ -156,5 +160,10 @@ class Http {
 
     public function getCookies(): array {
         return explode("; ", $this->parsedHeaders["Cookie"]);
+    }
+
+    public function getEtag(string $content) {
+        $etag = crc32($content);
+        return $etag;
     }
 }

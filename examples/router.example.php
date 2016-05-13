@@ -22,6 +22,8 @@ $router = new \Leloutama\lib\Core\Router\Router();
 $indexResponse = new Response();
 $indexResponse->setOnReadyMethodArgs("/index.html");
 
+$postResponse = new Response();
+
 $router->bind("/", $indexResponse);
 
 return $router;

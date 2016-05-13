@@ -32,7 +32,7 @@ class ErrorDocuments implements ServerExtension {
         return null;
     }
 
-    public function beforeHeaderCreationCall(string $content, string $mime, int $status, string $fileName) {
+    public function beforeHeaderCreationCall(string $content, string $mime, int $status) {
         if(array_key_exists($status, $this->config)) {
             $file = $this->replaceVarsInString(["%docRoot%" => $this->docRoot], $this->config[$status]);
             $fileContent = file_get_contents($file);
@@ -54,7 +54,7 @@ class ErrorDocuments implements ServerExtension {
         return $content;
     }
 
-    public function afterHeaderCreation(array $headers, string $content, string $mime, int $status, string $fileName) {
+    public function afterHeaderCreation(array $headers, string $content, string $mime, int $status) {
         $headers[] = "X-Extension-Used: ErrorDocuments For Leloutama";
         return $headers;
     }

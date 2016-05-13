@@ -20,7 +20,6 @@ class FileCheckr implements ClientExtension {
     private $content;
     private $status;
     private $mime;
-    private $fileName;
 
     public function __construct(Request $request, array $config){
         $this->request = $request;
@@ -28,7 +27,6 @@ class FileCheckr implements ClientExtension {
     }
 
     public function load(string $fileName): bool {
-        $this->fileName = $fileName;
         $content = file_get_contents($fileName);
         if($content != false) {
             $this->content = $content;
@@ -47,8 +45,7 @@ class FileCheckr implements ClientExtension {
         return array(
             "body" => $this->content,
             "status" => $this->status,
-            "mime" => $this->mime,
-            "fileName" => $this->fileName
+            "mime" => $this->mime
         );
     }
 }

@@ -12,6 +12,7 @@ namespace Leloutama\lib\Core\Utility;
 class Request {
     private $requestedResource;
     private $cookies;
+    private $ifNoneMatch;
 
     public function __construct() {
         return $this;
@@ -33,5 +34,9 @@ class Request {
 
     public function getRequestedResource(): string {
         return $this->requestedResource;
+    }
+
+    public function setIfNoneMatch(string $ifNoneMatch) {
+        $this->ifNoneMatch = $ifNoneMatch;
     }
 }

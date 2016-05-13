@@ -13,7 +13,6 @@ include "ClientExtensionManager.php";
 abstract class AbstractResponse {
     protected $body = "";
     protected $mime = "text/html";
-    protected $fileName = "";
     protected $onReadyMethod;
     protected $onReadyMethodArgs;
     protected $status = 200;
@@ -57,10 +56,6 @@ abstract class AbstractResponse {
         return $this->body;
     }
 
-    public function getFileName(): string {
-        return $this->fileName;
-    }
-
     public function getMime(): string {
         return $this->mime;
     }
@@ -94,12 +89,10 @@ abstract class AbstractResponse {
     public function set(array $data) {
         $body = $data["body"];
         $status = $data["status"];
-        $fileName = $data["fileName"];
         $mime = $data["mime"];
 
         $this->setBody($body);
         $this->setStatus($status);
-        $this->setFileName($fileName);
         $this->setMime($mime);
 
         return true;

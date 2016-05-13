@@ -1,5 +1,9 @@
 {
   "docRoot": "/home/gourab/Desktop/Leloutama/ServerPages",
+  "Cache-Config": {
+    "scope": "public",
+    "max-age": 120
+  },
   "Extensions": {
     "Client": {
       "FileCheckr": {
