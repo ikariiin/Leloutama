@@ -36,7 +36,7 @@ see something like this:
 
 For creating a router instance, firstly, you need to extend an abstract class for sending an response to a request.
 
-You have to override the `onReady` method. This method will be called when the server receives a request. And, that method _has to return `$this`_.
+You have to override the `onReady` method. This method will be called when the server receives a request.
 
 You can use the methods:
 
