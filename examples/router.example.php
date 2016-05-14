@@ -9,21 +9,20 @@ class Response extends \Leloutama\lib\Core\Utility\AbstractResponse {
             $fileCheckr->load($this->getConfig("docRoot") . $fileName);
             $data = $fileCheckr->getData();
 
+            if(!empty($this->getRequest()->getPostData())) {
+                $data["body"] .= "<center><h2>Your Name: " . $this->getRequest()->getPostData()["parsed"]["name"] . "</h2></center>";
+            }
+
             $this->set($data);
         } catch (\Exception $ex) {
             var_dump($ex->getMessage());
         }
-        return $this;
     }
 }
 
 $router = new \Leloutama\lib\Core\Router\Router();
 
-$indexResponse = new Response();
-$indexResponse->setOnReadyMethodArgs("/index.html");
-
-$postResponse = new Response();
-
-$router->bind("/", $indexResponse);
+$router->bind("/", (new Response("/index.html")));
+$router->bind("/post", (new Response("/post.html")));
 
 return $router;

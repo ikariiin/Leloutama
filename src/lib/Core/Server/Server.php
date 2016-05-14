@@ -37,44 +37,45 @@ class Server {
 
     private function dispatchMainThread(): callable {
         $webserverCallable = function(array $args) {
-            $socket = socket_create(AF_INET, SOCK_STREAM, SOL_TCP);
-            if(!socket_bind($socket, $args[2], $args[3])) {
-                exit("Socket connection could not be initialized due to the error: " . socket_strerror(socket_last_error($socket)) . "\n");
-            }
-            if(!socket_listen($socket)) {
-                exit("Socket connection could not be initialized due to the error: " . socket_strerror(socket_last_error($socket)) . "\n");
-            }
+            $stream = stream_socket_server(sprintf("tcp://%s:%d",
+                $args[2],
+                $args[3]
+            ));
+            stream_set_blocking($stream, 1);
 
             printf("Server started successfully.\nListening on ip: %s at port: %d\n",
                 $args[2],
                 $args[3]
             );
-            while(($client = socket_accept($socket))) {
-                $http = new Http();
-                $stringHeaders = $http->parseRawSocketRequest($client);
+            while(true) {
+                $client = stream_socket_accept($stream);
 
-                if(strlen($stringHeaders) > 0) {
-                    $ClientThread = new ThreadDispatcher(function(array $arguments, &$_this){
-                        $random = rand();
-                        $uid = hash("gost", $random);
-                        $client[$uid] = new Client($arguments[0], $arguments[1] , $arguments[2]);
+                if($client) {
+                    $stringHeaders = trim(fread($client, 4096));
+                    $parsedPacket = Http::parsePacket($stringHeaders);
+                    if(strlen($stringHeaders) > 0) {
+                        $ClientThread = new ThreadDispatcher(function(array $arguments, &$_this){
+                            $random = rand();
+                            $uid = hash("gost", $random);
+                            $client[$uid] = new Client($arguments[0], $arguments[1] , $arguments[2]);
 
-                        $serveOP = $client[$uid]->serve();
-                        if(!empty($serveOP)) {
-                            $_this->response = $serveOP;
+                            $serveOP = $client[$uid]->serve();
+                            if(!empty($serveOP)) {
+                                $_this->response = $serveOP;
 
-                            $client[$uid] = null;
-                            unset($client[$uid]);
+                                $client[$uid] = null;
+                                unset($client[$uid]);
+                            }
+
+                            return false;
+                        }, [$args[0], $args[1], $parsedPacket]);
+
+                        $ClientThread->run();
+
+                        if(isset($ClientThread->response)) {
+                            fwrite($client, $ClientThread->response);
+                            fclose($client);
                         }
-
-                        return false;
-                    }, [$args[0], $args[1] ,$stringHeaders]);
-
-                    $ClientThread->run();
-
-                    if(isset($ClientThread->response)) {
-                        socket_write($client, $ClientThread->response);
-                        socket_close($client);
                     }
                 }
             }

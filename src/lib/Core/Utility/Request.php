@@ -13,6 +13,7 @@ class Request {
     private $requestedResource;
     private $cookies;
     private $ifNoneMatch;
+    private $postData = [];
 
     public function __construct() {
         return $this;
@@ -36,7 +37,21 @@ class Request {
         return $this->requestedResource;
     }
 
-    public function setIfNoneMatch(string $ifNoneMatch) {
+    public function setIfNoneMatch(string $ifNoneMatch): self {
         $this->ifNoneMatch = $ifNoneMatch;
+        return $this;
+    }
+
+    public function getIfNoneMatch(): string {
+        return $this->ifNoneMatch;
+    }
+
+    public function setPostData(array $postData): self {
+        $this->postData = $postData;
+        return $this;
+    }
+
+    public function getPostData(): array {
+        return $this->postData;
     }
 }

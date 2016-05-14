@@ -10,6 +10,7 @@ namespace Leloutama\lib\Core\Router;
 class Nodes {
     protected $expose;
     protected $response;
+    protected $method;
 
     /**
      * Constructor for providing an instance of self.

@@ -21,10 +21,6 @@ abstract class AbstractResponse {
     private $request;
     private $config;
 
-    public function __construct() {
-        return $this;
-    }
-
     abstract public function onReady($arguments);
 
     public function initializeExtensionManager() {
@@ -44,10 +40,6 @@ abstract class AbstractResponse {
         $this->mime = $mime;
     }
 
-    public function setFileName(string $fileName) {
-        $this->fileName = $fileName;
-    }
-
     public function setStatus(int $code) {
         $this->status = $code;
     }
@@ -64,11 +56,11 @@ abstract class AbstractResponse {
         return $this->status;
     }
 
-    public function getRequest() {
+    public function getRequest(): Request {
         return $this->request;
     }
 
-    public function setOnReadyMethodArgs($arguments) {
+    public function __construct($arguments) {
         $this->onReadyMethodArgs = $arguments;
         return $this;
     }

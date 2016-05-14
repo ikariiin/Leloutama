@@ -119,7 +119,9 @@ class Http {
         $routesCount = count($routes);
         for($i = 0; $i < $routesCount; $i++) {
             if($routes[$i]->getExposedRoute() == $requestedRoute) {
-                return $routes[$i]->getResponse();
+                return [
+                    "response" => $routes[$i]->getResponse()
+                ];
             } else {
                 continue;
             }
@@ -165,5 +167,16 @@ class Http {
     public function getEtag(string $content) {
         $etag = crc32($content);
         return $etag;
+    }
+
+    public static function parsePacket(string $packet) {
+        $explode  = explode("\r\n\r\n", $packet);
+        $headers = $explode[0];
+        $body = (isset($explode[1])) ? $explode[1] : "";
+
+        return [
+            "headers" => $headers,
+            "body" => $body
+        ];
     }
 }

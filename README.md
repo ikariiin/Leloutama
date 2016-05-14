@@ -36,7 +36,7 @@ see something like this:
 
 For creating a router instance, firstly, you need to extend an abstract class for sending an response to a request.
 
-You have to override the `onClick` method. This method will be called when the server receives a request. And, that method _has to return `$this`_.
+You have to override the `onReady` method. This method will be called when the server receives a request. And, that method _has to return `$this`_.
 
 You can use the methods:
 
@@ -89,18 +89,34 @@ And then simply, define response for a request, and bind the response, like:
 // Instanciate the router
 $router = new \Leloutama\lib\Core\Router\Router();
 
-// Create a response, for maybe, the index page?
-$indexResponse = new Response();
-
-// Set the arg by which the onReady method must be called
-$indexResponse->setOnReadyMethodArgs("index.html");
-
-// And lastly, bind the exposure route and the response
-$router->bind("/", $indexResponse);
+// And lastly, bind the exposure route and a route to the index page
+// The argument for the onReady method must be supplied by the constructor of the Response
+$router->bind("/", (new Response("/index.html")));
 
 // And make sure to return the router, or the server will throw a brick at your face
 return $router;
 ```
+
+## Handling `POST` data
+
+If some post data is sent, you can access that data using:
+
+```
+$postData = $this->getRequest()->getPostData();
+```
+
+In any method of a router instance.
+
+Then, `$postData` would contain an array with the following structure:
+
+```
+Array(
+    "raw" => <string> (Contains the raw post data),
+    "parsed" => <array> (Contains the kv-pair of the data in an array format)
+)
+```
+
+If there is no post data, then `$postData` would contain an empty array.
 
 ## Extensions
 
@@ -341,7 +357,7 @@ The configurations for the extensions need to defined like:
 
 ## TODO
 * Implement doc-blocks (v1.2)
-* Implement HTTP Caching (v1.2)
+* Implement SSL
 * (...And more stuffs...)
 
 ## Why should you use it?
@@ -355,8 +371,7 @@ The configurations for the extensions need to defined like:
 * Currently, doesn't have much features.
 * The codebase is un-documented.
 * Many HTTP header's are yet to be utilised.
-* No HTTP caching as of now.
-* No content encryption.
+* No SSL/TLS support.
 
 ## PR-s
 

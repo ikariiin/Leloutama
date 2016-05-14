@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Post Data Test</title>
+    <style>
+        * {
+            transition: 0.2s all;
+        }
+
+        ::selection {
+            background-color: #333234;
+            color: #FFFFFF;
+        }
+
+        body {
+            font-family: "Roboto Light", Roboto, Arial, sans-serif;
+            font-size: 16px;
+            background-color: #212121;
+            color: #FFFFFF;
+        }
+
+        .jumbotron {
+            background-color: #5418B3;
+            border-radius: 4px;
+            box-shadow: 0 0 4px #232323;
+            width: 96%;
+            padding: 2%;
+        }
+
+        .jumbotron h1 {
+            font-size: 70px;
+            color: #1BB32C;
+            text-shadow: 2px 1px 5px #49AF54;
+            margin-bottom: 30px;
+        }
+
+        code {
+            background-color: #ededed;
+            border-radius: 4px;
+            color: crimson;
+            display: inline-block;
+            padding: 3px;
+            font-size: 14px;
+            font-family: monospace;
+        }
+
+        hr {
+            width: 40%;
+            margin-top: 25px;
+        }
+
+        a {
+            color: #009688;
+            text-decoration: none;
+        }
+
+        a:hover {
+            text-decoration: underline;
+        }
+
+        a:visited {
+            color: #009688;
+        }
+
+        .center-form {
+            width: 50%;
+            margin-left: 24%;
+            padding: 1%;
+            border: 2px solid #FFFFFF;
+            border-radius: 4px;
+            text-align: center;
+        }
+
+        .form-control {
+            width: 98%;
+            padding: 1%;
+            border-radius: 4px;
+            border: none;
+            font-family: inherit;
+            line-height: 1.5;
+            font-size: inherit;
+            font-weight: 700;
+            outline: none;
+        }
+
+        .btn-primary {
+            padding: 10px;
+            background-color: #1ca2b8;
+            border-radius: 4px;
+            border: none;
+            width: 50%;
+            font-family: inherit;
+            font-size: inherit;
+            line-height: 1.5;
+            color: #FFFFFF;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        .btn-primary:hover {
+            background-color: #06A0B8;
+        }
+    </style>
+</head>
+<body>
+<div class="jumbotron">
+    <h1>Test sending post data</h1>
+    <p>
+        Try out submitting forms with the <code>method="post"</code> thing!
+    </p>
+</div>
+<br />
+<br />
+<form class="center-form" method="post">
+    <h3>Enter Your Name:</h3>
+    <input type="text" class="form-control" id="name" name="name" placeholder="Your Name" />
+    <br>
+    <br>
+    <button class="btn-primary">Go &rarr;</button>
+</form>
+</body>
+</html>

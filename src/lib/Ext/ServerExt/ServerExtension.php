@@ -15,7 +15,7 @@ use Leloutama\lib\Core\Utility\Request;
 interface ServerExtension {
     public function __construct(array $configuration, string $docRoot);
 
-    public function beforeConstruct(Router $router, string $stringHeaders);
+    public function beforeConstruct(Router $router, string $stringHeaders, string $rawRequestBody);
 
     public function afterRequestBuild(Request $request, Http $http);
 

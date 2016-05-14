@@ -8,6 +8,7 @@
 
 namespace Leloutama\lib\Core\Server;
 require __DIR__ . "/Http.php";
+require __DIR__ . "/Body.php";
 require __DIR__ . "/../Utility/Request.php";
 require  __DIR__ . "/../Utility/ServerExtensionManager.php";
 use Leloutama\lib\Core\Router\Router;
@@ -20,6 +21,8 @@ class Client {
     protected $http;
     protected $stringHeaders;
     protected $request;
+    protected $rawRequestBody;
+    protected $body;
 
     /* Private Vars */
     private $config;
@@ -36,9 +39,9 @@ class Client {
      * Needs the user defined router as the first argument, and the raw string headers separated by \r\n, as the second.
      * @param Router $router
      * @param array $exts
-     * @param $stringHeaders
+     * @param $packet
      */
-    public function __construct(Router $router, array $exts, string $stringHeaders) {
+    public function __construct(Router $router, array $exts, array $packet) {
         $this->config = json_decode(file_get_contents(__DIR__ . "/../../../config/Core/config.json"), true);
 
         $this->exts = $exts;
@@ -46,13 +49,18 @@ class Client {
 
         $this->extInstances = $extInstances = $this->loadExt($exts);
 
+        $stringHeaders = $packet["headers"];
+        $rawRequestBody = $packet["body"];
+
         foreach($this->extInstances as $ext) {
-            $beforeConstruct = $ext->beforeConstruct($router, $stringHeaders);
+            $beforeConstruct = $ext->beforeConstruct($router, $stringHeaders, $rawRequestBody);
 
             if($beforeConstruct !== null) {
                 $router = $beforeConstruct["rotuer"];
 
                 $stringHeaders = $beforeConstruct["stringHeaders"];
+
+                $rawRequestBody = $beforeConstruct["rawRequestBody"];
             }
         }
 
@@ -60,7 +68,11 @@ class Client {
 
         $this->stringHeaders = $stringHeaders;
 
+        $this->rawRequestBody = $rawRequestBody;
+
         $this->http = new Http($stringHeaders);
+
+        $this->body = new Body();
     }
 
     /**
@@ -71,6 +83,10 @@ class Client {
     public function serve(): string {
         $this->http->Headerize();
         $this->http->parseHeaders();
+
+        $this->body->load($this->rawRequestBody);
+
+        $this->body->parse();
 
         $this->buildRequest();
 
@@ -103,9 +119,17 @@ class Client {
         $cookies = $this->http->getCookies();
         $requestedResource = $this->http->getRequestedResource();
 
-        $this->request = (new Request())
+        $this->request = (new Request)
             ->setCookies($cookies)
-            ->setRequestedResource($requestedResource);
+            ->setRequestedResource($requestedResource)
+            ->setIfNoneMatch($this->http->getHeaderParam("If-None-Match"));
+
+        if($this->http->getMethod() === "POST") {
+            $this->request->setPostData([
+                "raw" => $this->body->getRawBody(),
+                "parsed" => $this->body->getParsedBody()
+            ]);
+        }
 
         foreach ($this->extInstances as $ext) {
             $extAfterRequestBuild = $ext->afterRequestBuild($this->request, $this->http);
@@ -123,35 +147,25 @@ class Client {
      * @return array
      */
     private function process(): array {
-        $response = $this->http->getInfo($this->http->getRequestedResource(), $this->router);
-        if(!$response) {
+        $routeInfo =  $this->http->getInfo($this->http->getRequestedResource(), $this->router);
+        if(!$routeInfo) {
             $toServeContent = $this->get404();
             $mime = "text/html";
             $status = 404;
         } else {
-            if($this->http->getMethod() !== "GET") {
-                $toServeContent = $this->get405();
-                $mime = "text/html";
-                if(sprintf('"%d"', $this->http->getEtag($this->encodeBody($this->get405())[0])) == $this->http->getHeaderParam("If-None-Match")){
-                    $status = 304;
-                } else {
-                    $status = 405;
-                }
+            $response = $routeInfo["response"];
+            $response->setRequest($this->request)->loadConfig($this->config);
+
+            $response->onReady($response->getOnReadyMethodArgs());
+
+            if(sprintf('"%d"', $this->http->getEtag($this->encodeBody($response->getBody())[0])) == $this->http->getHeaderParam("If-None-Match")){
+                $toServeContent = $response->getBody();
+                $status = 304;
+                $mime = $response->getMime();
             } else {
-                $response->setRequest($this->request)->loadConfig($this->config);
-
-                $response->onReady($response->getOnReadyMethodArgs());
-
-                if(sprintf('"%d"', $this->http->getEtag($this->encodeBody($response->getBody())[0])) == $this->http->getHeaderParam("If-None-Match")){
-                    $toServeContent = $response->getBody();
-                    $status = 304;
-                    $mime = $response->getMime();
-                } else {
-                    var_dump($response);
-                    $toServeContent = $response->getBody();
-                    $status = $response->getStatus();
-                    $mime = $response->getMime();
-                }
+                $toServeContent = $response->getBody();
+                $status = $response->getStatus();
+                $mime = $response->getMime();
             }
         }
 
@@ -164,8 +178,6 @@ class Client {
                 $status = $extBeforeHeaderCreationCall["status"];
             }
         }
-
-        var_dump($toServeContent);
 
         return $this->createHeaders($toServeContent, $mime, $status);
     }
@@ -278,9 +290,12 @@ class Client {
     }
 
     private function createCacheHeaders(string $etag, array &$headers) {
+        $scope = (isset($this->config["Cache-Config"]["scope"])) ? $this->config["Cache-Config"]["scope"] : "public";
+        $maxAge = (isset($this->config["Cache-Config"]["max-age"])) ? $this->config["Cache-Config"]["max-age"] : 120;
+
         $headers[] = sprintf('Cache-Control: %s, max-age=%d',
-            $this->config["Cache-Config"]["scope"],
-            $this->config["Cache-Config"]["max-age"]
+            $scope,
+            $maxAge
         );
         $headers[] = sprintf('Etag: "%s"', $etag);
     }

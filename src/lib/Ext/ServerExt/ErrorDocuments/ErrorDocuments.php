@@ -24,7 +24,7 @@ class ErrorDocuments implements ServerExtension {
         $this->docRoot = $docRoot;
     }
 
-    public function beforeConstruct(Router $router, string $stringHeaders) {
+    public function beforeConstruct(Router $router, string $stringHeaders, string $rawRequestBody) {
         return null;
     }
 
