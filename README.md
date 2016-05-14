@@ -2,7 +2,6 @@
 A multi-threaded webserver, using sockets, written entirely in PHP.
 
 ### Requirements
-* A *nix operating system
 * PHP version >= 7, and a thread safe build
 * The [pthreads](https://github.com/krakjoe/pthreads) extension for PHP.
 
