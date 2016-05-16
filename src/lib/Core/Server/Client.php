@@ -23,6 +23,7 @@ class Client {
     protected $request;
     protected $rawRequestBody;
     protected $body;
+    protected $peerName;
 
     /* Private Vars */
     private $config;
@@ -36,14 +37,15 @@ class Client {
     /**
      * Client constructor.
      * Constructs the Client instance.
-     * Needs the user defined router as the first argument, and the raw string headers separated by \r\n, as the second.
      * @param Router $router
      * @param array $exts
-     * @param $packet
+     * @param array $packet
+     * @param string $peerName
      */
-    public function __construct(Router $router, array $exts, array $packet) {
+    public function __construct(Router $router, array $exts, array $packet, string $peerName) {
         $this->config = json_decode(file_get_contents(__DIR__ . "/../../../config/Core/config.json"), true);
 
+        $this->peerName = $peerName;
         $this->exts = $exts;
         $this->extManager = new ServerExtensionManager($this->config);
 
@@ -70,7 +72,8 @@ class Client {
 
         $this->rawRequestBody = $rawRequestBody;
 
-        $this->http = new Http($stringHeaders);
+        $this->http = (new Http($stringHeaders))
+            ->setRequestBody($rawRequestBody);
 
         $this->body = new Body();
     }
@@ -90,7 +93,7 @@ class Client {
 
         $this->buildRequest();
 
-        printf("Request Recieved \n \t Time: %s \n \t Requested Resource: %s \n \t Method: %s \n",
+        printf("Request Received\n\tTime: %s\n\tRequested Resource: %s \n\tMethod: %s\n",
             date("M d Y-H:i:s "),
             $this->http->getRequestedResource(),
             $this->http->getMethod()
@@ -129,6 +132,13 @@ class Client {
                 "raw" => $this->body->getRawBody(),
                 "parsed" => $this->body->getParsedBody()
             ]);
+        } elseif($this->http->getMethod() === "GET") {
+            $queryString = $this->http->getQueryString();
+            $parsed = $this->body->parse($queryString, "&");
+            $this->request->setQueryParams([
+                "raw" => $queryString,
+                "parsed" => $parsed
+            ]);
         }
 
         foreach ($this->extInstances as $ext) {
@@ -153,19 +163,25 @@ class Client {
             $mime = "text/html";
             $status = 404;
         } else {
-            $response = $routeInfo["response"];
-            $response->setRequest($this->request)->loadConfig($this->config);
-
-            $response->onReady($response->getOnReadyMethodArgs());
-
-            if(sprintf('"%d"', $this->http->getEtag($this->encodeBody($response->getBody())[0])) == $this->http->getHeaderParam("If-None-Match")){
-                $toServeContent = $response->getBody();
-                $status = 304;
-                $mime = $response->getMime();
+            if($this->http->getMethod() !== "GET" && $this->http->getMethod() !== "POST") {
+                $toServeContent = $this->get405();
+                $mime = "text/html";
+                $status = 405;
             } else {
-                $toServeContent = $response->getBody();
-                $status = $response->getStatus();
-                $mime = $response->getMime();
+                $response = $routeInfo["response"];
+                $response->setRequest($this->request)->loadConfig($this->config);
+
+                $response->onReady($response->getOnReadyMethodArgs());
+
+                if(sprintf('"%d"', $this->http->getEtag($this->encodeBody($response->getBody())[0])) == $this->http->getHeaderParam("If-None-Match")){
+                    $toServeContent = $response->getBody();
+                    $status = 304;
+                    $mime = $response->getMime();
+                } else {
+                    $toServeContent = $response->getBody();
+                    $status = $response->getStatus();
+                    $mime = $response->getMime();
+                }
             }
         }
 
@@ -224,7 +240,7 @@ class Client {
     private function createHeaders(string $content, string $mimeType, int $status = 200): array {
         $headers = [];
 
-        $headers[] = sprintf("HTTP/1.1 %d %s", $status, $this->http->HTTP_REASON[$status]);
+        $headers[] = sprintf("HTTP/1.1 %d %s", $status, Http::HTTP_REASON[$status]);
 
         $encodeOP = $this->encodeBody($content);
 
@@ -249,7 +265,7 @@ class Client {
             }
         }
 
-        $this->logResponse(sprintf("%d %s", $status, $this->http->HTTP_REASON[$status]));
+        $this->logResponse(sprintf("%d %s", $status, Http::HTTP_REASON[$status]));
 
         if($status === 304) {
             $content = "";

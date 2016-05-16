@@ -39,24 +39,26 @@ class Body {
      * Parses the raw request body stored in $this->rawRequestBody.
      * Returns an array containing the k-v pairs.
      * If the raw request body is empty, it returns an empty array.
+     * @param string $fieldsDelimiter
+     * @param string $rawBody
      * @return array
      */
-    public function parse(): array {
-        /*
-         * First of all we need to check if the raw body is null
-         */
-        if(is_null($this->rawRequestBody)) {
-            return [];
+    public function parse(string $rawBody = "", string $fieldsDelimiter = ";"): array {
+        /* Check if the user wants to parse the stored string, or any other thing */
+        if(strlen(trim($rawBody)) === 0) {
+            if(is_null($this->rawRequestBody)) {
+                $this->parsedBody = [];
+                return [];
+            }
+            /* Make a local copy of raw body from THIS object. */
+            $rawBody = $this->rawRequestBody;
         }
-
-        /* Make a local copy of raw body. */
-        $rawBody = $this->rawRequestBody;
 
         /* Variable to store the k-v pairs. */
         $values = [];
 
         /* Delimiter of separate fields are ';'. */
-        $fields = explode(";", $rawBody);
+        $fields = explode($fieldsDelimiter, $rawBody);
 
         /* Get the number of fields. */
         $fieldsCount = count($fields);
@@ -90,7 +92,7 @@ class Body {
      * Returns the raw request body.
      * @return string
      */
-    public function getRawBody(): string {
+    public function getRawBody() {
         return $this->rawRequestBody;
     }
 }

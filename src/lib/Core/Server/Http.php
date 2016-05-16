@@ -7,8 +7,9 @@ class Http {
     protected $unparsedHeader;
     protected $stringHeaders;
     private $parsedHeaders;
+    private $requestBody;
 
-    public $HTTP_REASON = [
+    const HTTP_REASON = [
         100 => "Continue",
         101 => "Switching Protocols",
         200 => "OK",
@@ -59,6 +60,7 @@ class Http {
 
     public function __construct(string $stringHeaders = "") {
         $this->stringHeaders = $stringHeaders;
+        return $this;
     }
 
     public function Headerize(string $delimiter = "\r\n"): array {
@@ -77,7 +79,18 @@ class Http {
                 $uriHeader = explode(" ", $headers[$i]);
 
                 $parsedHeaders["route"]["method"] = $uriHeader[0];
-                $parsedHeaders["route"]["uri"] = $uriHeader[1];
+                if(strpos($uriHeader[1], "?")) {
+                    $queryString = strstr($uriHeader[1], "?");
+                    $uri = strstr($uriHeader[1], "?", true);
+
+                    $parsedHeaders["route"]["uri"] = $uri;
+
+                    $queryString = substr($queryString, 1, strlen($queryString) - 1);
+                    $parsedHeaders["route"]["queryString"] = $queryString;
+                } else {
+                    $parsedHeaders["route"]["uri"] = $uriHeader[1];
+                    $parsedHeaders["route"]["queryString"] = "";
+                }
                 $parsedHeaders["route"]["http"] = $uriHeader[2];
 
                 continue;
@@ -144,6 +157,10 @@ class Http {
         return $this->parsedHeaders["route"]["method"];
     }
 
+    public function getQueryString(): string {
+        return $this->parsedHeaders["route"]["queryString"];
+    }
+
     public function getHttpVersion(): string {
         return $this->parsedHeaders["route"]["http"];
     }
@@ -167,6 +184,19 @@ class Http {
     public function getEtag(string $content) {
         $etag = crc32($content);
         return $etag;
+    }
+
+    public function setRequestBody($requestBody): self {
+        $this->requestBody = $requestBody;
+        return $this;
+    }
+
+    public function getRequestBody(): string {
+        return $this->requestBody;
+    }
+
+    public function getParsedHeaders(): array {
+        return $this->parsedHeaders;
     }
 
     public static function parsePacket(string $packet) {

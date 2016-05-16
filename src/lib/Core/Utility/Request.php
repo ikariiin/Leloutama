@@ -14,6 +14,7 @@ class Request {
     private $cookies;
     private $ifNoneMatch;
     private $postData = [];
+    private $queryParams = [];
 
     public function __construct() {
         return $this;
@@ -53,5 +54,14 @@ class Request {
 
     public function getPostData(): array {
         return $this->postData;
+    }
+
+    public function setQueryParams(array $queryParams): self {
+        $this->queryParams = $queryParams;
+        return $this;
+    }
+
+    public function getQueryParams(): array {
+        return $this->queryParams;
     }
 }

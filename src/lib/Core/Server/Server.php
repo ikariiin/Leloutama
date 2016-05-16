@@ -51,6 +51,7 @@ class Server {
                 $client = stream_socket_accept($stream);
 
                 if($client) {
+                    $peerName = stream_socket_get_name($client, true);
                     $stringHeaders = trim(fread($client, 4096));
                     $parsedPacket = Http::parsePacket($stringHeaders);
                     if(strlen($stringHeaders) > 0) {
@@ -68,7 +69,7 @@ class Server {
                             }
 
                             return false;
-                        }, [$args[0], $args[1], $parsedPacket]);
+                        }, [$args[0], $args[1], $parsedPacket, $peerName]);
 
                         $ClientThread->run();
 
