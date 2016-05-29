@@ -1,18 +1,21 @@
 <?php
 if (function_exists("cli_set_process_title")) {
-    @cli_set_process_title("aerys");
+    @cli_set_process_title("Leloutama");
 }
 if(!extension_loaded("pthreads")) {
     exit("You need the pthreads extension for running the extension.\n");
 }
-include __DIR__ . "/../autoloads/router.autoloads.php";
-require __DIR__ . "/../src/lib/Core/Server/Server.php";
+require_once __DIR__ . "/../autoloads/router.autoloads.php";
+require_once __DIR__ . "/../src/lib/Core/Server/Server.php";
+require_once __DIR__ . "/../vendor/autoload.php";
 
 $host = "127.0.0.1";
 
-$port = 9000;
+$port = 1337;
 
-$router = new \Leloutama\lib\Core\Router\Router();
+$dispatcher = \FastRoute\simpleDispatcher(function (\FastRoute\RouteCollector $r) {
+    // NO ROUTES! MUHAHAHAHAH!
+});
 
 $exts = [];
 
@@ -65,9 +68,9 @@ if(isset($options["port"]) && $options["port"]) {
 }
 
 if(isset($options["router"]) && $options["router"]) {
-    $router = require($options["router"]);
+    $dispatcher = require($options["router"]);
 }
 
-$server = new \Leloutama\lib\Core\Server\Server($router, $exts, $host, $port);
+$server = new \Leloutama\lib\Core\Server\Server($dispatcher, $exts, $host, $port);
 
 $server->startServer();

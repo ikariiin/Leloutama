@@ -7,12 +7,15 @@
  */
 
 namespace Leloutama\lib\Core\Server;
-require __DIR__ . "/Http.php";
-require __DIR__ . "/Body.php";
-require __DIR__ . "/../Utility/Request.php";
-require  __DIR__ . "/../Utility/ServerExtensionManager.php";
-use Leloutama\lib\Core\Router\Router;
-use Leloutama\lib\Core\Utility\Request;
+
+require_once __DIR__ . "/autoloads.php";
+
+use FastRoute\Dispatcher;
+use Leloutama\lib\Core\Server\Utilities\Creator;
+use Leloutama\lib\Core\Server\Utilities\Logger;
+use Leloutama\lib\Core\Server\Utilities\RequestBuilder;
+use SuperClosure\Serializer;
+use Leloutama\lib\Core\Server\Utilities\ServerContentGetter;
 use Leloutama\lib\Core\Utility\ServerExtensionManager;
 
 class Client {
@@ -37,12 +40,12 @@ class Client {
     /**
      * Client constructor.
      * Constructs the Client instance.
-     * @param Router $router
+     * @param  $router
      * @param array $exts
      * @param array $packet
      * @param string $peerName
      */
-    public function __construct(Router $router, array $exts, array $packet, string $peerName) {
+    public function __construct(Dispatcher $router, array $exts, array $packet, string $peerName) {
         $this->config = json_decode(file_get_contents(__DIR__ . "/../../../config/Core/config.json"), true);
 
         $this->peerName = $peerName;
@@ -84,62 +87,48 @@ class Client {
      * @return string
      */
     public function serve(): string {
-        $this->http->Headerize();
-        $this->http->parseHeaders();
+        try {
+            $this->http->Headerize();
+            $this->http->parseHeaders();
 
-        $this->body->load($this->rawRequestBody);
+            $this->body->load($this->rawRequestBody);
 
-        $this->body->parse();
+            $this->body->parse();
 
-        $this->buildRequest();
+            $this->buildRequest();
 
-        printf("Request Received\n\tTime: %s\n\tRequested Resource: %s \n\tMethod: %s\n",
-            date("M d Y-H:i:s "),
-            $this->http->getRequestedResource(),
-            $this->http->getMethod()
-        );
+            (new Logger($this->http))
+                ->logRequest();
 
-        $response = $this->process();
+            $response = $this->process();
 
-        foreach ($this->extInstances as $ext) {
-            $extFinalServeOp = $ext->beforeFinalServe($response);
+            foreach ($this->extInstances as $ext) {
+                $extFinalServeOp = $ext->beforeFinalServe($response);
 
-            if($extFinalServeOp !== null) {
-                $response = $extFinalServeOp;
+                if($extFinalServeOp !== null) {
+                    $response = $extFinalServeOp;
+                }
             }
+
+            $responseHeaders = $response["headers"];
+            $responseBody = $response["content"];
+
+
+            $finalPacket = $responseHeaders . "\r\n\r\n" . $responseBody;
+
+            return $finalPacket;
         }
-
-        $responseHeaders = $response[0];
-        $responseBody = $response[1];
-
-
-        $finalPacket = $responseHeaders . "\r\n\r\n" . $responseBody;
-
-        return $finalPacket;
+        catch (\Throwable $ex) {
+            exit(sprintf(
+                "An Catchable Fatal Error Was Faced in the Server. The server would no longer continue to work until, a restart is done for the server, or an solution is made for the problem.\nError description: %s\n",
+                $ex->getMessage()
+            ));
+        }
     }
 
     protected function buildRequest() {
-        $cookies = $this->http->getCookies();
-        $requestedResource = $this->http->getRequestedResource();
-
-        $this->request = (new Request)
-            ->setCookies($cookies)
-            ->setRequestedResource($requestedResource)
-            ->setIfNoneMatch($this->http->getHeaderParam("If-None-Match"));
-
-        if($this->http->getMethod() === "POST") {
-            $this->request->setPostData([
-                "raw" => $this->body->getRawBody(),
-                "parsed" => $this->body->getParsedBody()
-            ]);
-        } elseif($this->http->getMethod() === "GET") {
-            $queryString = $this->http->getQueryString();
-            $parsed = $this->body->parse($queryString, "&");
-            $this->request->setQueryParams([
-                "raw" => $queryString,
-                "parsed" => $parsed
-            ]);
-        }
+        $this->request = (new RequestBuilder())
+            ->buildRequest($this->http, $this->body);
 
         foreach ($this->extInstances as $ext) {
             $extAfterRequestBuild = $ext->afterRequestBuild($this->request, $this->http);
@@ -157,105 +146,69 @@ class Client {
      * @return array
      */
     private function process(): array {
-        $routeInfo =  $this->http->getInfo($this->http->getRequestedResource(), $this->router);
-        if(!$routeInfo) {
-            $toServeContent = $this->get404();
-            $mime = "text/html";
-            $status = 404;
-        } else {
-            if($this->http->getMethod() !== "GET" && $this->http->getMethod() !== "POST") {
-                $toServeContent = $this->get405();
-                $mime = "text/html";
-                $status = 405;
-            } else {
-                $response = $routeInfo["response"];
-                $response->setRequest($this->request)->loadConfig($this->config);
+        $toServeContent = (new ServerContentGetter())
+            ->get500();
+        $mime = "text/html";
+        $status = 500;
+        try {
+            $fastRouter = $this->router;
 
-                $response->onReady($response->getOnReadyMethodArgs());
+            $routeInfo = $fastRouter->dispatch($this->http->getMethod(), $this->http->getRequestedResource());
+            switch ($routeInfo[0]) {
+                case Dispatcher::NOT_FOUND:
+                    $toServeContent = (new ServerContentGetter())
+                        ->get404();
 
-                if(sprintf('"%d"', $this->http->getEtag($this->encodeBody($response->getBody())[0])) == $this->http->getHeaderParam("If-None-Match")){
-                    $toServeContent = $response->getBody();
-                    $status = 304;
+                    $mime = "text/html";
+
+                    $status = 404;
+                    break;
+                case Dispatcher::METHOD_NOT_ALLOWED:
+                    $toServeContent = (new ServerContentGetter())
+                        ->get405();
+
+                    $mime = "text/html";
+
+                    $status = 405;
+                    break;
+                case Dispatcher::FOUND:
+                    $handler = $routeInfo[1];
+                    // Deserialize the handler if it isn't already
+
+                    if(!($handler instanceof \Closure)) {
+                        $serializer = new Serializer();
+                        // Deserialize the handler
+                        $handler = $serializer->unserialize($handler);
+                    }
+                    $vars = $routeInfo[2];
+
+                    // Invoke the handler
+                    $response = $handler($this->request, $vars);
+
+                    $toServeContent = $response->getContent();
                     $mime = $response->getMime();
-                } else {
-                    $toServeContent = $response->getBody();
-                    $status = $response->getStatus();
-                    $mime = $response->getMime();
-                }
+
+                    $status = 200;
+                    break;
             }
+        } catch (\Throwable $ex) {
+            printf("There was an error in the server, description: %s\nIn file: %s\nIn line: %s\n",
+                $ex->getMessage(),
+                $ex->getFile(),
+                $ex->getLine()
+            );
         }
 
-        foreach($this->extInstances as $ext) {
-            $extBeforeHeaderCreationCall = $ext->beforeHeaderCreationCall($toServeContent, $mime, $status);
-
-            if($extBeforeHeaderCreationCall !== null) {
-                $toServeContent = $extBeforeHeaderCreationCall["content"];
-                $mime = $extBeforeHeaderCreationCall["mime"];
-                $status = $extBeforeHeaderCreationCall["status"];
-            }
-        }
-
-        return $this->createHeaders($toServeContent, $mime, $status);
+        return $this->create($toServeContent, $mime, $status);
     }
 
     protected function formatBody(string $body): string {
         return implode("\r\n", explode("\n", $body));
     }
 
-    protected function get404(): string {
-        $html404 = file_get_contents(__DIR__ . "/../Resources/400Errors.html");
-
-        $vars = array(
-            "%error_code%" => "404",
-            "%error_code_meaning%" => "Not Found",
-            "%error_description%" => "The router was not configured to handle this route at all... So..."
-        );
-
-        $html404 = $this->replaceVarsInErrorPage($vars, $html404);
-
-        return $html404;
-    }
-
-    protected function get405(): string {
-        $html405 = file_get_contents(__DIR__ . "/../Resources/400Errors.html");
-
-        $vars = array(
-            "%error_code%" => "405",
-            "%error_code_meaning%" => "Method Not Supported",
-            "%error_description%" => "The method requested is not supported by the server."
-        );
-
-        $html405 = $this->replaceVarsInErrorPage($vars, $html405);
-
-        return $html405;
-    }
-
-    protected function replaceVarsInErrorPage(array $vars, string $content): string {
-        foreach($vars as $varName => $value) {
-            $content = str_replace($varName, $value, $content);
-        }
-        return $content;
-    }
-
-    private function createHeaders(string $content, string $mimeType, int $status = 200): array {
-        $headers = [];
-
-        $headers[] = sprintf("HTTP/1.1 %d %s", $status, Http::HTTP_REASON[$status]);
-
-        $encodeOP = $this->encodeBody($content);
-
-        $headers[] = sprintf("Content-Type: %s", $mimeType);
-
-        if(!empty($encodeOP)) {
-            $content = $encodeOP[0];
-            $headers[] = sprintf("Content-Encoding: %s", $encodeOP[1]);
-        }
-
-        $headers[] = sprintf("Content-Length: %d", strlen($content));
-
-        $this->createCacheHeaders($this->http->getEtag($content), $headers);
-
-        $headers[] = sprintf("X-Powered-By: %s", self::SERVER_NAME);
+    private function create(string $content, string $mimeType, int $status): array {
+        $creator = new Creator($this->http, $this->config);
+        $headers = $creator->create($content, $mimeType, $status);
 
         foreach($this->extInstances as $ext) {
             $extAfterHeaderCreation = $ext->afterHeaderCreation($headers, $content, $mimeType, $status);
@@ -264,28 +217,7 @@ class Client {
                 $headers = $extAfterHeaderCreation;
             }
         }
-
-        $this->logResponse(sprintf("%d %s", $status, Http::HTTP_REASON[$status]));
-
-        if($status === 304) {
-            $content = "";
-        }
-
-        $headers = implode("\r\n", $headers);
-        return [$headers, $content];
-    }
-
-    protected function encodeBody(string $body): array {
-        $toReturn = [];
-        if(in_array("gzip", $this->http->getAcceptedEncoding())) {
-            $body = gzencode($body);
-            $toReturn = [$body, "gzip"];
-        } elseif(in_array("deflate", $this->http->getAcceptedEncoding())) {
-            $body = gzcompress($body);
-            $toReturn = [$body, "deflate"];
-        }
-
-        return $toReturn;
+        return $creator->afterFirstPhase($headers, $content, $status);
     }
 
     private function loadExt(array $exts) {
@@ -303,23 +235,5 @@ class Client {
             }
         }
         return $extensionsBundle;
-    }
-
-    private function createCacheHeaders(string $etag, array &$headers) {
-        $scope = (isset($this->config["Cache-Config"]["scope"])) ? $this->config["Cache-Config"]["scope"] : "public";
-        $maxAge = (isset($this->config["Cache-Config"]["max-age"])) ? $this->config["Cache-Config"]["max-age"] : 120;
-
-        $headers[] = sprintf('Cache-Control: %s, max-age=%d',
-            $scope,
-            $maxAge
-        );
-        $headers[] = sprintf('Etag: "%s"', $etag);
-    }
-
-    protected function logResponse(string $status) {
-        printf("Response Sent\n \t For Resource: %s\n \t Status: %s\n",
-            $this->http->getRequestedResource(),
-            $status
-        );
     }
 }

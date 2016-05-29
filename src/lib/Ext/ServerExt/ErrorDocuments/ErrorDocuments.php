@@ -8,6 +8,7 @@
 
 namespace Leloutama\lib\Ext\ServerExt\ErrorDocuments;
 
+use FastRoute\Dispatcher;
 use Leloutama\lib\Ext\ServerExt\ServerExtension;
 use Leloutama\lib\Core\Router\Router;
 use Leloutama\lib\Core\Utility\Request;
@@ -24,7 +25,7 @@ class ErrorDocuments implements ServerExtension {
         $this->docRoot = $docRoot;
     }
 
-    public function beforeConstruct(Router $router, string $stringHeaders, string $rawRequestBody) {
+    public function beforeConstruct(Dispatcher $router, string $stringHeaders, string $rawRequestBody) {
         return null;
     }
 

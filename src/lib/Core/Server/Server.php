@@ -9,13 +9,14 @@
 namespace Leloutama\lib\Core\Server;
 require __DIR__ . "/Client.php";
 require __DIR__ . "/ThreadDispatcher.php";
+use FastRoute\Dispatcher;
 use Leloutama\lib\Core\Router\Router;
 
 class Server {
     private $router;
     private $args;
 
-    public function __construct(Router $router, array $exts = [], string $ipAddress = "127.0.0.1", int $port = 2406) {
+    public function __construct(Dispatcher $router, array $exts = [], string $ipAddress = "127.0.0.1", int $port = 2406) {
         $this->args = [$router, $exts ,$ipAddress, $port];
 
         $this->router = $router;
@@ -58,7 +59,7 @@ class Server {
                         $ClientThread = new ThreadDispatcher(function(array $arguments, &$_this){
                             $random = rand();
                             $uid = hash("gost", $random);
-                            $client[$uid] = new Client($arguments[0], $arguments[1] , $arguments[2]);
+                            $client[$uid] = new Client($arguments[0], $arguments[1] , $arguments[2], $arguments[3]);
 
                             $serveOP = $client[$uid]->serve();
                             if(!empty($serveOP)) {

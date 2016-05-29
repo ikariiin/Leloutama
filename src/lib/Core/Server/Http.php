@@ -1,6 +1,7 @@
 <?php
 namespace Leloutama\lib\Core\Server;
 use Leloutama\lib\Core\Router\Router;
+use Leloutama\lib\Core\Server\Utilities\Headers;
 
 
 class Http {
@@ -150,7 +151,7 @@ class Http {
      * Header information getting methods
      */
     public function getRequestedResource(): string {
-        return $this->parsedHeaders["route"]["uri"];
+        return rawurldecode($this->parsedHeaders["route"]["uri"]);
     }
 
     public function getMethod(): string {

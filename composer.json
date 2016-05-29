@@ -1,0 +1,6 @@
+{
+  "require": {
+    "nikic/fast-route": "^1.0.0",
+    "jeremeamia/superclosure": "^2.0"
+  }
+}

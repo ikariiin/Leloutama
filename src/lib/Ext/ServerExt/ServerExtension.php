@@ -8,6 +8,7 @@
 
 namespace Leloutama\lib\Ext\ServerExt;
 
+use FastRoute\Dispatcher;
 use Leloutama\lib\Core\Router\Router;
 use Leloutama\lib\Core\Server\Http;
 use Leloutama\lib\Core\Utility\Request;
@@ -15,7 +16,7 @@ use Leloutama\lib\Core\Utility\Request;
 interface ServerExtension {
     public function __construct(array $configuration, string $docRoot);
 
-    public function beforeConstruct(Router $router, string $stringHeaders, string $rawRequestBody);
+    public function beforeConstruct(Dispatcher $router, string $stringHeaders, string $rawRequestBody);
 
     public function afterRequestBuild(Request $request, Http $http);
 
