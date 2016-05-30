@@ -1,28 +1,25 @@
 <?php
+$dispatcher = \FastRoute\simpleDispatcher(function (\FastRoute\RouteCollector $r) {
+    $r->addRoute("GET", "/", function ($request, $vars) {
+        $response = (new \Leloutama\lib\Core\Utility\Response($request));
 
-class Response extends \Leloutama\lib\Core\Utility\AbstractResponse {
-    public function onReady($fileName) {
-        $this->initializeExtensionManager();
+        $fileChecker = $response->extManager->load("FileCheckr");
 
-        try {
-            $fileCheckr = $this->extensionManager->load("FileCheckr");
-            $fileCheckr->load($this->getConfig("docRoot") . $fileName);
-            $data = $fileCheckr->getData();
+        $content = $fileChecker->load(__DIR__ . "/../ServerPages/index.html")->getContent();
+        $response
+            ->setContent($content)
+            ->setMime("text/html");
 
-            if(!empty($this->getRequest()->getPostData())) {
-                $data["body"] .= "<center><h2>Your Name: " . $this->getRequest()->getPostData()["parsed"]["name"] . "</h2></center>";
-            }
+        return $response;
+    });
 
-            $this->set($data);
-        } catch (\Exception $ex) {
-            var_dump($ex->getMessage());
-        }
-    }
-}
+    $r->addRoute("GET", "/greet/{name}", function ($request, $vars) {
+        $response = (new \Leloutama\lib\Core\Utility\Response($request))
+            ->setContent("<h1>Hi There, " . $vars["name"] . "</h1>")
+            ->setMime("text/html");
 
-$router = new \Leloutama\lib\Core\Router\Router();
+        return $response;
+    });
+});
 
-$router->bind("/", (new Response("/index.html")));
-$router->bind("/post", (new Response("/post.html")));
-
-return $router;
+return $dispatcher;

@@ -35,7 +35,7 @@ class Creator {
         $headers[] = sprintf("Content-Length: %d", strlen($content));
 
         (new CacheGenerator($this->config))
-            ->createCacheHeaders($this->http->getEtag($content), $headers);
+            ->createCacheHeaders(ETag::getEtag($content), $headers);
 
         $headers[] = sprintf("X-Powered-By: %s", Client::SERVER_NAME);
 

@@ -26,26 +26,22 @@ class FileCheckr implements ClientExtension {
         $this->config = $config;
     }
 
-    public function load(string $fileName): bool {
+    public function load(string $fileName): self {
         $content = file_get_contents($fileName);
         if($content != false) {
             $this->content = $content;
             $this->status = 200;
             $this->mime = mime_content_type($fileName);
-            return true;
         } else {
             $this->content = file_get_contents(__DIR__ . "/Html/FileChecker.html");
             $this->status = 500;
             $this->mime = "text/html";
-            return false;
         }
+
+        return $this;
     }
 
-    public function getData(): array {
-        return array(
-            "body" => $this->content,
-            "status" => $this->status,
-            "mime" => $this->mime
-        );
+    public function getContent(): string {
+        return $this->content;
     }
 }

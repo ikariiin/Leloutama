@@ -12,6 +12,7 @@ require_once __DIR__ . "/autoloads.php";
 
 use FastRoute\Dispatcher;
 use Leloutama\lib\Core\Server\Utilities\Creator;
+use Leloutama\lib\Core\Server\Utilities\ETag;
 use Leloutama\lib\Core\Server\Utilities\Logger;
 use Leloutama\lib\Core\Server\Utilities\RequestBuilder;
 use SuperClosure\Serializer;
@@ -119,10 +120,12 @@ class Client {
             return $finalPacket;
         }
         catch (\Throwable $ex) {
-            exit(sprintf(
-                "An Catchable Fatal Error Was Faced in the Server. The server would no longer continue to work until, a restart is done for the server, or an solution is made for the problem.\nError description: %s\n",
-                $ex->getMessage()
-            ));
+            printf("There was an error in the server, description: %s\nIn file: %s\nIn line: %s\n",
+                $ex->getMessage(),
+                $ex->getFile(),
+                $ex->getLine()
+            );
+            exit(1);
         }
     }
 
@@ -150,53 +153,50 @@ class Client {
             ->get500();
         $mime = "text/html";
         $status = 500;
-        try {
-            $fastRouter = $this->router;
+        $fastRouter = $this->router;
 
-            $routeInfo = $fastRouter->dispatch($this->http->getMethod(), $this->http->getRequestedResource());
-            switch ($routeInfo[0]) {
-                case Dispatcher::NOT_FOUND:
-                    $toServeContent = (new ServerContentGetter())
-                        ->get404();
+        $routeInfo = $fastRouter->dispatch($this->http->getMethod(), $this->http->getRequestedResource());
+        switch ($routeInfo[0]) {
+            case Dispatcher::NOT_FOUND:
+                $toServeContent = (new ServerContentGetter())
+                    ->get404();
 
-                    $mime = "text/html";
+                $mime = "text/html";
 
-                    $status = 404;
-                    break;
-                case Dispatcher::METHOD_NOT_ALLOWED:
-                    $toServeContent = (new ServerContentGetter())
-                        ->get405();
+                $status = 404;
+                break;
+            case Dispatcher::METHOD_NOT_ALLOWED:
+                $toServeContent = (new ServerContentGetter())
+                    ->get405();
 
-                    $mime = "text/html";
+                $mime = "text/html";
 
-                    $status = 405;
-                    break;
-                case Dispatcher::FOUND:
-                    $handler = $routeInfo[1];
-                    // Deserialize the handler if it isn't already
+                $status = 405;
+                break;
+            case Dispatcher::FOUND:
+                $handler = $routeInfo[1];
+                // Deserialize the handler if it isn't already
 
-                    if(!($handler instanceof \Closure)) {
-                        $serializer = new Serializer();
-                        // Deserialize the handler
-                        $handler = $serializer->unserialize($handler);
-                    }
-                    $vars = $routeInfo[2];
+                if(!($handler instanceof \Closure)) {
+                    $serializer = new Serializer();
+                    // Deserialize the handler
+                    $handler = $serializer->unserialize($handler);
+                }
+                $vars = $routeInfo[2];
 
-                    // Invoke the handler
-                    $response = $handler($this->request, $vars);
+                // Invoke the handler
+                $response = $handler($this->request, $vars);
 
-                    $toServeContent = $response->getContent();
-                    $mime = $response->getMime();
+                $toServeContent = $response->getContent();
+                $mime = $response->getMime();
 
+                // Now, check if there is a cache in the client, and if there is, then make the status 304!
+                if($this->http->getHeaderParam("If-None-Match") === sprintf('"%d"', ETag::getEtag($toServeContent))) {
+                    $status = 304;
+                } else {
                     $status = 200;
-                    break;
-            }
-        } catch (\Throwable $ex) {
-            printf("There was an error in the server, description: %s\nIn file: %s\nIn line: %s\n",
-                $ex->getMessage(),
-                $ex->getFile(),
-                $ex->getLine()
-            );
+                }
+                break;
         }
 
         return $this->create($toServeContent, $mime, $status);

@@ -7,13 +7,17 @@
  */
 
 namespace Leloutama\lib\Core\Utility;
+
+require_once __DIR__ . "/ClientExtensionManager.php";
+
 class Response {
-    private $request;
     private $content;
     private $mime;
+    public $extManager;
 
     public function __construct(Request $request) {
-        $this->request = $request;
+        $this->extManager = new ClientExtensionManager($request, json_decode(file_get_contents(__DIR__ . "/../../../config/Core/config.json"), true));
+        return $this;
     }
 
     /**
@@ -25,19 +29,6 @@ class Response {
         // Set the content in this object.
         $this->content = $content;
 
-        // Call the mime type setter.
-        $this->setMime($content);
-
-        // Return this object.
-        return $this;
-    }
-
-    /**
-     * MIME Type setter.
-     * @param string $content
-     * @return Response
-     */
-    public function setMime(string $content): self {
         // Need to set up the mime type now.
         $finfo = new \finfo(FILEINFO_MIME);
 
@@ -46,6 +37,18 @@ class Response {
 
         // Set the mime type in the object.
         $this->mime = $mimeType;
+
+        // Return this object.
+        return $this;
+    }
+
+    /**
+     * MIME Type setter.
+     * @param string $mime
+     * @return Response
+     */
+    public function setMime(string $mime): self {
+        $this->mime = $mime;
 
         // Return this object.
         return $this;

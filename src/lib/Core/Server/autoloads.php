@@ -17,3 +17,4 @@ require_once __DIR__ . "/Utilities/RequestBuilder.php";
 require_once __DIR__ . "/Utilities/Encode.php";
 require_once __DIR__ . "/Utilities/Logger.php";
 require_once __DIR__ . "/Utilities/Creator.php";
+require_once __DIR__ . "/Utilities/ETag.php";

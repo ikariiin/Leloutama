@@ -182,11 +182,6 @@ class Http {
         return explode("; ", $this->parsedHeaders["Cookie"]);
     }
 
-    public function getEtag(string $content) {
-        $etag = crc32($content);
-        return $etag;
-    }
-
     public function setRequestBody($requestBody): self {
         $this->requestBody = $requestBody;
         return $this;
