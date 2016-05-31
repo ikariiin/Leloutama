@@ -125,7 +125,17 @@ class Client {
                 $ex->getFile(),
                 $ex->getLine()
             );
-            exit(1);
+            $content = (new ServerContentGetter())
+                ->get500();
+            $mime = "text/html";
+            $status = 500;
+
+            $creator = (new Creator($this->http, $this->config));
+            $headers = $creator->create($content, $mime, $status);
+            $response = $creator->afterFirstPhase($headers, $content, $status);
+            $response = $response["headers"] . "\r\n\r\n" . $response["content"];
+
+            return $response;
         }
     }
 

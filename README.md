@@ -7,12 +7,19 @@ A multi-threaded webserver, written entirely in PHP.
 
 # Install the dependencies and make things get going
 
+First of all, clone this repo, by:
+
+```
+git clone https://github.com/gourabNagDev/Leloutama && cd Leloutama
+```
+
 Get started by installing the dependencies, and writing the patches for the dependencies! Don't worry everything is automated!
 Just run the script by:
 ```
 $ install/install
 ```
 In the root directory of the server!
+**AND THE COMPOSER EXECUTABLE MUST INSTALLED GOBALLY!**
 
 After that to launch the example server, do this:
 

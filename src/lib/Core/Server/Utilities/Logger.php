@@ -18,18 +18,24 @@ class Logger {
     }
 
     public function logRequest() {
-        printf("Request Received\n\tTime: %s\n\tRequested Resource: %s \n\tMethod: %s\n",
+        $request = sprintf("Request Received\n\tTime: %s\n\tRequested Resource: %s \n\tMethod: %s\n",
             date("M d Y-H:i:s "),
             $this->http->getRequestedResource(),
             $this->http->getMethod()
         );
+        echo "\nLOG LEVEL: NORMAL" . $request;
+        $previousContent = file_get_contents(__DIR__ . "/../../../../logs/Leloutama.log");
+        file_put_contents(__DIR__ . "/../../../../logs/Leloutama.log", $previousContent . "\nLOG LEVEL: NORMAL\n" . $request);
     }
 
     public function logResponse(string $status) {
-        printf("Response Sent\n \t For Resource: %s\n \t Status: %s\n",
+        $response = sprintf("Response Sent\n \t For Resource: %s\n \t Status: %s\n",
             $this->http->getRequestedResource(),
             $status
         );
+        echo $response;
+        $previousContent = file_get_contents(__DIR__ . "/../../../../logs/Leloutama.log");
+        file_put_contents(__DIR__ . "/../../../../logs/Leloutama.log", $previousContent . "\nLOG LEVEL: NORMAL\n" . $response);
     }
 
     public function logError(\Throwable $ex) {
@@ -38,5 +44,11 @@ class Logger {
             $ex->getFile(),
             $ex->getLine()
         );
+        $error = "\nLOG LEVEL: ERROR";
+        $error .= "TIME: " . date("M d Y-H:i:s ") . "\n";
+        $error .= "MESSAGE: " . $ex->getMessage() . "\n";
+        $error .= "STACK TRACE: " . $ex->getTraceAsString() . "\n";
+        $previousContent = file_get_contents(__DIR__ . "/../../../../logs/Leloutama.log");
+        file_put_contents(__DIR__ . "/../../../../logs/Leloutama.log", $previousContent . $error);
     }
 }
