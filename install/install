@@ -400,6 +400,9 @@ if(file_exists(__DIR__ . "/../vendor/nikic/fast-route/src/Dispatcher.php")) {
     file_put_contents(__DIR__ . "/../vendor/nikic/fast-route/src/RouteCollector.php", $RouteCollector_php);
     printf("Writing custom patch into %s/vendor/jeremeamia/SuperClosure/src/SerializableClosure.php\n", __DIR__ . "/..");
     file_put_contents(__DIR__ . "/../vendor/jeremeamia/SuperClosure/src/SerializableClosure.php", $SerializableClosure_php);
+
+    mkdir(__DIR__ . "/../src/logs");
+    file_put_contents(__DIR__ . "/../src/logs/Leloutama.log", "LELOUTAMA LOGS!\n");
 } else {
     exit("\n\nYOU SEE THAT ERROR THING OVER THERE ^^^^\nYOU SUCK AND YOUR COMPUTER SUCKS.\n*I may suck as well, but the probability is less...*\n");
 }
