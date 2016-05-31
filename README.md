@@ -5,8 +5,25 @@ A multi-threaded webserver, written entirely in PHP.
 * PHP version >= 7, and a thread safe build
 * The [pthreads](https://github.com/krakjoe/pthreads) extension for PHP.
 
-# GO FIGURE THIS YOURSELF
-*Pfft, nah, I'm going to do this in a while... I am lazy that's all*
+# Install the dependencies and make things get going
+
+Get started by installing the dependencies, and writing the patches for the dependencies! Don't worry everything is automated!
+Just run the script by:
+```
+$ install/install
+```
+In the root directory of the server!
+
+After that to launch the example server, do this:
+
+```
+$ cli/run --router examples/router.example.php
+```
+
+it would give an output like:
+```
+
+```
 
 ## TODO
 * Implement doc-blocks (v1.3.1)

@@ -1,3 +1,4 @@
+#!/usr/bin/env php
 <?php
 /**
  * Created by PhpStorm.
@@ -164,10 +165,10 @@ REGEXBASEDABSTRACT;
 $SerializableClosure_php = <<<SERIALIZABLECLOSURE
 <?php namespace SuperClosure;
 
+require_once  __DIR__ . "/../../../../src/lib/Core/Utility/Response.php";
+
 use Closure;
 use SuperClosure\Exception\ClosureUnserializationException;
-
-require_once  __DIR__ . "/../../../../src/lib/Core/Utility/Response.php";
 
 /**
  * This class acts as a wrapper for a closure, and allows it to be serialized.
@@ -373,7 +374,7 @@ function __reconstruct_closure(array \$__data)
             @eval("\${\$__recursive_reference} = {\$__data['code']};");
             \$__closure = \${\$__recursive_reference};
         } else {
-            @eval("\$__closure = {\$__data['code']};");
+            @eval("\\\$__closure = {\$__data['code']};");
         }
     } catch (\ParseError \$e) {
         // Discard the parse error.
@@ -386,16 +387,19 @@ SERIALIZABLECLOSURE;
 
 echo "This executable needs composer installed globally!\n";
 
-system("cd .. && composer install");
+if(!file_exists("composer.json")) {
+    exit("Run the installer from the root folder of the server.\nCurrently running from " . __DIR__);
+}
+
+system("composer install");
 
 // Replace the files
 
 if(file_exists(__DIR__ . "/../vendor/nikic/fast-route/src/Dispatcher.php")) {
+    printf("Writing custom patch into %s/vendor/nikic/fast-route/src/RouteCollector.php\n", __DIR__ . "/..");
     file_put_contents(__DIR__ . "/../vendor/nikic/fast-route/src/RouteCollector.php", $RouteCollector_php);
-    file_put_contents(__DIR__ . "/../vendor/nikic/fast-route/src/Dispatcher/RegexBasedAbstract.php", $RegexBasedAbstract_php);
+    printf("Writing custom patch into %s/vendor/jeremeamia/SuperClosure/src/SerializableClosure.php\n", __DIR__ . "/..");
     file_put_contents(__DIR__ . "/../vendor/jeremeamia/SuperClosure/src/SerializableClosure.php", $SerializableClosure_php);
 } else {
-    exit("YOU SUCK AND YOUR COMPUTER SUCKS.\nI may suck as well, but the probability is less...");
+    exit("\n\nYOU SEE THAT ERROR THING OVER THERE ^^^^\nYOU SUCK AND YOUR COMPUTER SUCKS.\n*I may suck as well, but the probability is less...*\n");
 }
-
-
