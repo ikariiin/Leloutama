@@ -22,8 +22,11 @@ $ cli/run --router examples/router.example.php
 
 it would give an output like:
 ```
-
+Server started successfully.
+Listening on ip: 127.0.0.1 at port: 1337
 ```
+
+Now, go to `localhost:1337` and you'd get to see the sample index page!
 
 ## TODO
 * Implement doc-blocks (v1.3.1)

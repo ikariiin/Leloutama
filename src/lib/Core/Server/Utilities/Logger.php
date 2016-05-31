@@ -31,4 +31,12 @@ class Logger {
             $status
         );
     }
+
+    public function logError(\Throwable $ex) {
+        printf("There was an error in the server, description: %s\nIn file: %s\nIn line: %s\n",
+            $ex->getMessage(),
+            $ex->getFile(),
+            $ex->getLine()
+        );
+    }
 }
