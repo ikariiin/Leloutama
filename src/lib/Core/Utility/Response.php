@@ -8,18 +8,25 @@
 
 namespace Leloutama\lib\Core\Utility;
 
+use Leloutama\lib\Core\Server\Utilities\ServerContentGetter;
+
 require_once __DIR__ . "/ClientExtensionManager.php";
+require_once __DIR__ . "/Utilities.php";
 
 class Response {
     private $content;
     private $mime;
     private $headers;
     private $status;
+    private $request;
+    private $config;
 
     public $extManager;
 
     public function __construct(Request $request) {
-        $this->extManager = new ClientExtensionManager($request, json_decode(file_get_contents(__DIR__ . "/../../../config/config.json"), true));
+        $this->request = $request;
+        $this->config = json_decode(file_get_contents(__DIR__ . "/../../../config/config.json"), true);
+        $this->extManager = new ClientExtensionManager($request, $this->config);
         return $this;
     }
 
@@ -66,6 +73,7 @@ class Response {
     }
 
     /**
+     * Mime type getter.
      * @return string
      */
     public function getMime(): string {
@@ -73,6 +81,7 @@ class Response {
     }
 
     /**
+     * Status setter.
      * @param int $status
      * @return Response
      */
@@ -83,6 +92,7 @@ class Response {
     }
 
     /**
+     * Status getter.
      * @return int
      */
     public function getStatus(): int {
@@ -90,6 +100,7 @@ class Response {
     }
 
     /**
+     * Method to set the HTTP version and the status of the response.
      * @param string $httpVersionAndStatus
      * @return Response
      */
@@ -100,6 +111,7 @@ class Response {
     }
 
     /**
+     * Normal headers setter.
      * @param string $key
      * @param string $value
      * @return Response
@@ -111,6 +123,7 @@ class Response {
     }
 
     /**
+     * Headers getter as string.
      * @return string
      */
     public function getHeadersAsString(): string {
@@ -126,9 +139,39 @@ class Response {
     }
 
     /**
+     * Headers getter as array.
      * @return array
      */
     public function getHeadersAsArray(): array {
         return $this->headers;
+    }
+
+    /**
+     * Maps the incoming request to the requested file, in the document root!
+     * @return Response
+     */
+    public function map() {
+        $request = $this->request;
+        $requestedURI = $request->getRequestedResource();
+
+        $requestedURI = Utilities::removeDotPathSegments($requestedURI);
+        $docRoot = $this->config["docRoot"];
+
+        $fileName = $docRoot . $requestedURI;
+        if(file_exists($fileName)) {
+            $response = (new Response($this->request))
+                ->setContent(file_get_contents($fileName))
+                ->setMime("text/html")
+                ->setStatus(200);
+        } else {
+            $response = (new Response($this->request))
+                ->setContent((new ServerContentGetter())
+                    ->get404()
+                )
+                ->setMime("text/html")
+                ->setStatus(404);
+        }
+
+        return $response;
     }
 }
