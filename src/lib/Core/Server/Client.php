@@ -12,7 +12,6 @@ require_once __DIR__ . "/autoloads.php";
 
 use FastRoute\Dispatcher;
 use Leloutama\lib\Core\Server\Utilities\Creator;
-use Leloutama\lib\Core\Server\Utilities\ETag;
 use Leloutama\lib\Core\Server\Utilities\Logger;
 use Leloutama\lib\Core\Server\Utilities\RequestBuilder;
 use Leloutama\lib\Core\Utility\Response;
