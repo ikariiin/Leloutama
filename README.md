@@ -19,7 +19,7 @@ Just run the script by:
 $ install/install
 ```
 In the root directory of the server!
-**AND THE COMPOSER EXECUTABLE MUST INSTALLED GOBALLY!**
+**AND THE COMPOSER EXECUTABLE MUST INSTALLED GLOBALLY!**
 
 After that to launch the example server, do this:
 

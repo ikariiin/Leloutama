@@ -193,6 +193,10 @@ class Client {
         return $this->create($response);
     }
 
+    /**
+     * @param string $body
+     * @return string
+     */
     protected function formatBody(string $body): string {
         return implode("\r\n", explode("\n", $body));
     }
@@ -211,6 +215,10 @@ class Client {
         return $creator->afterFirstPhase($response);
     }
 
+    /**
+     * @param array $exts
+     * @return array
+     */
     private function loadExt(array $exts) {
         $extCount = count($exts);
         $extensionsBundle = [];
