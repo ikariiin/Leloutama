@@ -109,14 +109,6 @@ class Client {
 
             $response = $this->process();
 
-            foreach ($this->extInstances as $ext) {
-                $extFinalServeOp = $ext->beforeFinalServe($response);
-
-                if($extFinalServeOp !== null) {
-                    $response = $extFinalServeOp;
-                }
-            }
-
             $responseHeaders = $response->getHeadersAsString();
             $responseBody = $response->getContent();
 
@@ -211,7 +203,7 @@ class Client {
         $response = $creator->create($response);
 
         foreach($this->extInstances as $ext) {
-            $extAfterHeaderCreation = $ext->afterHeaderCreation($response);
+            $extAfterHeaderCreation = $ext->afterCreation($response);
 
             if($extAfterHeaderCreation !== null) {
                 $response = $extAfterHeaderCreation;
