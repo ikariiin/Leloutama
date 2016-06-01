@@ -9,8 +9,8 @@
 namespace Leloutama\lib\Ext\ServerExt\ErrorDocuments;
 
 use FastRoute\Dispatcher;
+use Leloutama\lib\Core\Utility\Response;
 use Leloutama\lib\Ext\ServerExt\ServerExtension;
-use Leloutama\lib\Core\Router\Router;
 use Leloutama\lib\Core\Utility\Request;
 use Leloutama\lib\Core\Server\Http;
 
@@ -55,12 +55,7 @@ class ErrorDocuments implements ServerExtension {
         return $content;
     }
 
-    public function afterHeaderCreation(array $headers, string $content, string $mime, int $status) {
-        $headers[] = "X-Extension-Used: ErrorDocuments For Leloutama";
-        return $headers;
-    }
-
-    public function beforeFinalServe(array $headAndBody) {
+    public function afterCreation(Response $response) {
         return null;
     }
 }

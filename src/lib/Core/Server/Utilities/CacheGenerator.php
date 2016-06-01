@@ -7,6 +7,8 @@
  */
 
 namespace Leloutama\lib\Core\Server\Utilities;
+use Leloutama\lib\Core\Utility\Response;
+
 class CacheGenerator {
     private $config;
 
@@ -14,14 +16,17 @@ class CacheGenerator {
         $this->config = $config;
     }
 
-    public function createCacheHeaders(string $etag, array &$headers) {
-        $scope = (isset($this->config["Cache-Config"]["scope"])) ? $this->config["Cache-Config"]["scope"] : "public";
-        $maxAge = (isset($this->config["Cache-Config"]["max-age"])) ? $this->config["Cache-Config"]["max-age"] : 120;
+    public function createCacheHeaders(Response $response) {
+        $scope = (isset($this->config["Cache-Config"]["scope"])) ? "public" : $this->config["Cache-Config"]["scope"];
+        $maxAge = (isset($this->config["Cache-Config"]["max-age"])) ? 120 : $this->config["Cache-Config"]["max-age"];
 
-        $headers[] = sprintf('Cache-Control: %s, max-age=%d',
+        $response->setHeader("Cache-Control", sprintf("%s, max-age=%d",
             $scope,
             $maxAge
-        );
-        $headers[] = sprintf('Etag: "%s"', $etag);
+        ));
+
+        $response->setHeader("Etag", '"' . ETag::getEtag($response->getContent()) . '"');
+
+        return $response;
     }
 }

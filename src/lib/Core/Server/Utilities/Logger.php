@@ -23,7 +23,7 @@ class Logger {
             $this->http->getRequestedResource(),
             $this->http->getMethod()
         );
-        echo "\nLOG LEVEL: NORMAL" . $request;
+        echo "\nLOG LEVEL: NORMAL\n" . $request;
         $previousContent = file_get_contents(__DIR__ . "/../../../../logs/Leloutama.log");
         file_put_contents(__DIR__ . "/../../../../logs/Leloutama.log", $previousContent . "\nLOG LEVEL: NORMAL\n" . $request);
     }
@@ -33,7 +33,7 @@ class Logger {
             $this->http->getRequestedResource(),
             $status
         );
-        echo $response;
+        echo "\nLOG LEVEL: NORMAL\n" . $response;
         $previousContent = file_get_contents(__DIR__ . "/../../../../logs/Leloutama.log");
         file_put_contents(__DIR__ . "/../../../../logs/Leloutama.log", $previousContent . "\nLOG LEVEL: NORMAL\n" . $response);
     }

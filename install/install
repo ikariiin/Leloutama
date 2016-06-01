@@ -395,14 +395,31 @@ system("composer install");
 
 // Replace the files
 
-if(file_exists(__DIR__ . "/../vendor/nikic/fast-route/src/Dispatcher.php")) {
+function putPatches() {
+    global $RouteCollector_php, $SerializableClosure_php;
     printf("Writing custom patch into %s/vendor/nikic/fast-route/src/RouteCollector.php\n", __DIR__ . "/..");
     file_put_contents(__DIR__ . "/../vendor/nikic/fast-route/src/RouteCollector.php", $RouteCollector_php);
     printf("Writing custom patch into %s/vendor/jeremeamia/SuperClosure/src/SerializableClosure.php\n", __DIR__ . "/..");
     file_put_contents(__DIR__ . "/../vendor/jeremeamia/SuperClosure/src/SerializableClosure.php", $SerializableClosure_php);
+}
 
+function createLogDir() {
     mkdir(__DIR__ . "/../src/logs");
     file_put_contents(__DIR__ . "/../src/logs/Leloutama.log", "LELOUTAMA LOGS!\n");
+}
+
+function configureDocRoot() {
+    echo "Configuring the configuration...\n";
+    $config = file_get_contents(__DIR__ . "/../src/config/config.json");
+    $config = json_decode($config, true);
+    $config["docRoot"] = __DIR__ . "/../ServerPages";
+    $config = json_encode($config, JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT);
+    file_put_contents(__DIR__ . "/../src/config/config.json", $config);
+}
+if(file_exists(__DIR__ . "/../vendor/nikic/fast-route/src/Dispatcher.php")) {
+    putPatches();
+    createLogDir();
+    configureDocRoot();
 } else {
     exit("\n\nYOU SEE THAT ERROR THING OVER THERE ^^^^\nYOU SUCK AND YOUR COMPUTER SUCKS.\n*I may suck as well, but the probability is less...*\n");
 }

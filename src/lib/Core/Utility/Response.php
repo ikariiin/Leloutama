@@ -13,10 +13,13 @@ require_once __DIR__ . "/ClientExtensionManager.php";
 class Response {
     private $content;
     private $mime;
+    private $headers;
+    private $status;
+
     public $extManager;
 
     public function __construct(Request $request) {
-        $this->extManager = new ClientExtensionManager($request, json_decode(file_get_contents(__DIR__ . "/../../../config/Core/config.json"), true));
+        $this->extManager = new ClientExtensionManager($request, json_decode(file_get_contents(__DIR__ . "/../../../config/config.json"), true));
         return $this;
     }
 
@@ -63,9 +66,69 @@ class Response {
     }
 
     /**
-     * @return mixed
+     * @return string
      */
-    public function getMime() {
+    public function getMime(): string {
         return $this->mime;
+    }
+
+    /**
+     * @param int $status
+     * @return Response
+     */
+    public function setStatus(int $status): self {
+        $this->status = $status;
+
+        return $this;
+    }
+
+    /**
+     * @return int
+     */
+    public function getStatus(): int {
+        return $this->status;
+    }
+
+    /**
+     * @param string $httpVersionAndStatus
+     * @return Response
+     */
+    public function setHttpAndStatus(string $httpVersionAndStatus): self {
+        $this->headers["top"] = $httpVersionAndStatus;
+
+        return $this;
+    }
+
+    /**
+     * @param string $key
+     * @param string $value
+     * @return Response
+     */
+    public function setHeader(string $key, string $value): self {
+        $this->headers[$key] = $value;
+
+        return $this;
+    }
+
+    /**
+     * @return string
+     */
+    public function getHeadersAsString(): string {
+        $stringHeaders = "";
+        if(isset($this->headers["top"])) {
+            $stringHeaders .= $this->headers["top"];
+        }
+        unset($this->headers["top"]);
+        foreach ($this->headers as $key => $value) {
+            $stringHeaders .= sprintf("\r\n%s: %s", $key, $value);
+        }
+        return $stringHeaders;
+    }
+
+    /**
+     * @return array
+     */
+    public function getHeadersAsArray(): array {
+        return $this->headers;
     }
 }

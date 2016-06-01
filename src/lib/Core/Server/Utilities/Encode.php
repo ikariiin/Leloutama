@@ -18,10 +18,16 @@ class Encode {
         $toReturn = [];
         if(function_exists("gzencode") && in_array("gzip", $http->getAcceptedEncoding())) {
             $body = gzencode($body);
-            $toReturn = [$body, "gzip"];
+            $toReturn = [
+                "content" => $body,
+                "algorithm" => "gzip"
+            ];
         } elseif(function_exists("gzcompress") && in_array("deflate", $http->getAcceptedEncoding())) {
             $body = gzcompress($body);
-            $toReturn = [$body, "deflate"];
+            $toReturn = [
+                "content" => $body,
+                "algorithm" => "deflate"
+            ];
         }
 
         return $toReturn;

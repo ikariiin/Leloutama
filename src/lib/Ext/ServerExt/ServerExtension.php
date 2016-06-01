@@ -12,6 +12,7 @@ use FastRoute\Dispatcher;
 use Leloutama\lib\Core\Router\Router;
 use Leloutama\lib\Core\Server\Http;
 use Leloutama\lib\Core\Utility\Request;
+use Leloutama\lib\Core\Utility\Response;
 
 interface ServerExtension {
     public function __construct(array $configuration, string $docRoot);
@@ -22,7 +23,5 @@ interface ServerExtension {
 
     public function beforeHeaderCreationCall(string $content, string $mime, int $status);
 
-    public function afterHeaderCreation(array $headers, string $content, string $mime, int $status);
-
-    public function beforeFinalServe(array $headAndBody);
+    public function afterCreation(Response $response);
 }

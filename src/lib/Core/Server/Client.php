@@ -15,6 +15,7 @@ use Leloutama\lib\Core\Server\Utilities\Creator;
 use Leloutama\lib\Core\Server\Utilities\ETag;
 use Leloutama\lib\Core\Server\Utilities\Logger;
 use Leloutama\lib\Core\Server\Utilities\RequestBuilder;
+use Leloutama\lib\Core\Utility\Response;
 use SuperClosure\Serializer;
 use Leloutama\lib\Core\Server\Utilities\ServerContentGetter;
 use Leloutama\lib\Core\Utility\ServerExtensionManager;
@@ -47,39 +48,44 @@ class Client {
      * @param string $peerName
      */
     public function __construct(Dispatcher $router, array $exts, array $packet, string $peerName) {
-        $this->config = json_decode(file_get_contents(__DIR__ . "/../../../config/Core/config.json"), true);
+        try {
+            $this->config = json_decode(file_get_contents(__DIR__ . "/../../../config/config.json"), true);
 
-        $this->peerName = $peerName;
-        $this->exts = $exts;
-        $this->extManager = new ServerExtensionManager($this->config);
+            $this->peerName = $peerName;
+            $this->exts = $exts;
+            $this->extManager = new ServerExtensionManager($this->config);
 
-        $this->extInstances = $extInstances = $this->loadExt($exts);
+            $this->extInstances = $extInstances = $this->loadExt($exts);
 
-        $stringHeaders = $packet["headers"];
-        $rawRequestBody = $packet["body"];
+            $stringHeaders = $packet["headers"];
+            $rawRequestBody = $packet["body"];
 
-        foreach($this->extInstances as $ext) {
-            $beforeConstruct = $ext->beforeConstruct($router, $stringHeaders, $rawRequestBody);
+            foreach($this->extInstances as $ext) {
+                $beforeConstruct = $ext->beforeConstruct($router, $stringHeaders, $rawRequestBody);
 
-            if($beforeConstruct !== null) {
-                $router = $beforeConstruct["rotuer"];
+                if($beforeConstruct !== null) {
+                    $router = $beforeConstruct["rotuer"];
 
-                $stringHeaders = $beforeConstruct["stringHeaders"];
+                    $stringHeaders = $beforeConstruct["stringHeaders"];
 
-                $rawRequestBody = $beforeConstruct["rawRequestBody"];
+                    $rawRequestBody = $beforeConstruct["rawRequestBody"];
+                }
             }
+
+            $this->router = $router;
+
+            $this->stringHeaders = $stringHeaders;
+
+            $this->rawRequestBody = $rawRequestBody;
+
+            $this->http = (new Http($stringHeaders))
+                ->setRequestBody($rawRequestBody);
+
+            $this->body = new Body();
+        } catch (\Throwable $ex) {
+            (new Logger($this->http))
+                ->logError($ex);
         }
-
-        $this->router = $router;
-
-        $this->stringHeaders = $stringHeaders;
-
-        $this->rawRequestBody = $rawRequestBody;
-
-        $this->http = (new Http($stringHeaders))
-            ->setRequestBody($rawRequestBody);
-
-        $this->body = new Body();
     }
 
     /**
@@ -111,8 +117,8 @@ class Client {
                 }
             }
 
-            $responseHeaders = $response["headers"];
-            $responseBody = $response["content"];
+            $responseHeaders = $response->getHeadersAsString();
+            $responseBody = $response->getContent();
 
 
             $finalPacket = $responseHeaders . "\r\n\r\n" . $responseBody;
@@ -120,20 +126,18 @@ class Client {
             return $finalPacket;
         }
         catch (\Throwable $ex) {
-            printf("There was an error in the server, description: %s\nIn file: %s\nIn line: %s\n",
-                $ex->getMessage(),
-                $ex->getFile(),
-                $ex->getLine()
-            );
-            $content = (new ServerContentGetter())
-                ->get500();
-            $mime = "text/html";
-            $status = 500;
+            (new Logger($this->http))
+                ->logError($ex);
+            $response = (new Response($this->request))
+                ->setContent((new ServerContentGetter())
+                    ->get500())
+                ->setMime("text/html")
+                ->setStatus(500);
 
             $creator = (new Creator($this->http, $this->config));
-            $headers = $creator->create($content, $mime, $status);
-            $response = $creator->afterFirstPhase($headers, $content, $status);
-            $response = $response["headers"] . "\r\n\r\n" . $response["content"];
+            $response = $creator->create($response);
+            $response = $creator->afterFirstPhase($response);
+            $response = $response->getHeadersAsString() . "\r\n\r\n" . $response->getContent();
 
             return $response;
         }
@@ -153,35 +157,31 @@ class Client {
     }
 
     /**
-     * Processes the router, gets the requested resource, creates the headers, and returns an array.
-     * If there is some error, it calls the methods to get the content, and also returns an array with the structure of
-     * [0] => headers, [1] => body
-     * @return array
+     * @return Response
      */
-    private function process(): array {
-        $toServeContent = (new ServerContentGetter())
-            ->get500();
-        $mime = "text/html";
-        $status = 500;
+    private function process(): Response {
+        $response = (new Response($this->request))
+            ->setContent((new ServerContentGetter())
+                ->get500())
+            ->setMime("text/html")
+            ->setStatus(500);
         $fastRouter = $this->router;
 
         $routeInfo = $fastRouter->dispatch($this->http->getMethod(), $this->http->getRequestedResource());
         switch ($routeInfo[0]) {
             case Dispatcher::NOT_FOUND:
-                $toServeContent = (new ServerContentGetter())
-                    ->get404();
-
-                $mime = "text/html";
-
-                $status = 404;
+                $response = (new Response($this->request))
+                    ->setContent((new ServerContentGetter())
+                        ->get404())
+                    ->setStatus(404)
+                    ->setMime("text/html");
                 break;
             case Dispatcher::METHOD_NOT_ALLOWED:
-                $toServeContent = (new ServerContentGetter())
-                    ->get405();
-
-                $mime = "text/html";
-
-                $status = 405;
+                $response = (new Response($this->request))
+                    ->setContent((new ServerContentGetter())
+                        ->get405())
+                    ->setMime("text/html")
+                    ->setStatus(405);
                 break;
             case Dispatcher::FOUND:
                 $handler = $routeInfo[1];
@@ -196,38 +196,28 @@ class Client {
 
                 // Invoke the handler
                 $response = $handler($this->request, $vars);
-
-                $toServeContent = $response->getContent();
-                $mime = $response->getMime();
-
-                // Now, check if there is a cache in the client, and if there is, then make the status 304!
-                if($this->http->getHeaderParam("If-None-Match") === sprintf('"%d"', ETag::getEtag($toServeContent))) {
-                    $status = 304;
-                } else {
-                    $status = 200;
-                }
                 break;
         }
 
-        return $this->create($toServeContent, $mime, $status);
+        return $this->create($response);
     }
 
     protected function formatBody(string $body): string {
         return implode("\r\n", explode("\n", $body));
     }
 
-    private function create(string $content, string $mimeType, int $status): array {
+    private function create(Response $response): Response {
         $creator = new Creator($this->http, $this->config);
-        $headers = $creator->create($content, $mimeType, $status);
+        $response = $creator->create($response);
 
         foreach($this->extInstances as $ext) {
-            $extAfterHeaderCreation = $ext->afterHeaderCreation($headers, $content, $mimeType, $status);
+            $extAfterHeaderCreation = $ext->afterHeaderCreation($response);
 
             if($extAfterHeaderCreation !== null) {
-                $headers = $extAfterHeaderCreation;
+                $response = $extAfterHeaderCreation;
             }
         }
-        return $creator->afterFirstPhase($headers, $content, $status);
+        return $creator->afterFirstPhase($response);
     }
 
     private function loadExt(array $exts) {
