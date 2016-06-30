@@ -6,9 +6,11 @@ if (function_exists("cli_set_process_title")) {
 if(!extension_loaded("pthreads")) {
     exit("You need the pthreads extension for running the extension.\n");
 }
-require_once __DIR__ . "/../autoloads/router.autoloads.php";
-require_once __DIR__ . "/../src/lib/Core/Server/Server.php";
+if(!file_exists(__DIR__ . "/../vendor/")) {
+    exit("You need to install the dependencies and etc. by running `cli/install` first.");
+}
 require_once __DIR__ . "/../vendor/autoload.php";
+require_once __DIR__ . "/../autoloads/autoloader.php";
 
 $host = "127.0.0.1";
 

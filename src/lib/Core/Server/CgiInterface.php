@@ -7,20 +7,32 @@
  */
 
 namespace Leloutama\lib\Core\Server;
+use Leloutama\lib\Core\Utility\Response;
+
 class CgiInterface {
     private $http;
     private $peerInfo;
     private $fileName;
     private $port;
 
-    public function __construct(Http $http, int $port, string $fileName, string $peerInfo) {
+    /**
+     * CgiInterface constructor.
+     * @param Http $http
+     * @param int $port
+     * @param string $peerInfo
+     * @param Response $response
+     */
+    public function __construct(Http $http, int $port, string $peerInfo, Response $response) {
         $this->http = $http;
         $this->port = $port;
         $this->peerInfo = $peerInfo;
-        $this->fileName = $fileName;
 
         $envVars = $this->createEnvVars();
         $messageBody = $this->giveMessageBody();
+    }
+
+    private static function analyseResponse(Response $response) {
+        //
     }
 
     /**

@@ -8,7 +8,7 @@
 
 namespace Leloutama\lib\Core\Server;
 
-require_once __DIR__ . "/autoloads.php";
+//require_once __DIR__ . "/autoloads.php";
 
 use FastRoute\Dispatcher;
 use Leloutama\lib\Core\Server\Utilities\Creator;
@@ -82,7 +82,7 @@ class Client {
 
             $this->body = new Body();
         } catch (\Throwable $ex) {
-            (new Logger($this->http))
+            (new Logger($this->http, $this->config))
                 ->logError($ex);
         }
     }
@@ -103,7 +103,7 @@ class Client {
 
             $this->buildRequest();
 
-            (new Logger($this->http))
+            (new Logger($this->http, $this->config))
                 ->logRequest();
 
             $response = $this->process();
@@ -117,7 +117,7 @@ class Client {
             return $finalPacket;
         }
         catch (\Throwable $ex) {
-            (new Logger($this->http))
+            (new Logger($this->http, $this->config))
                 ->logError($ex);
             $response = (new Response($this->request))
                 ->setContent((new ServerContentGetter())
@@ -161,11 +161,16 @@ class Client {
         $routeInfo = $fastRouter->dispatch($this->http->getMethod(), $this->http->getRequestedResource());
         switch ($routeInfo[0]) {
             case Dispatcher::NOT_FOUND:
-                $response = (new Response($this->request))
-                    ->setContent((new ServerContentGetter())
-                        ->get404())
-                    ->setStatus(404)
-                    ->setMime("text/html");
+                if(isset($this->config["UseDocRootMapperIfRouterNotConfigured"]) && $this->config["UseDocRootMapperIfRouterNotConfigured"]) {
+                    $response = (new Response($this->request))
+                        ->map();
+                } else {
+                    $response = (new Response($this->request))
+                        ->setContent((new ServerContentGetter())
+                            ->get404())
+                        ->setStatus(404)
+                        ->setMime("text/html");
+                }
                 break;
             case Dispatcher::METHOD_NOT_ALLOWED:
                 $response = (new Response($this->request))

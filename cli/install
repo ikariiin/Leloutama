@@ -165,7 +165,6 @@ REGEXBASEDABSTRACT;
 $SerializableClosure_php = <<<SERIALIZABLECLOSURE
 <?php namespace SuperClosure;
 
-require_once  __DIR__ . "/../../../../src/lib/Core/Utility/Response.php";
 
 use Closure;
 use SuperClosure\Exception\ClosureUnserializationException;
@@ -391,35 +390,53 @@ if(!file_exists("composer.json")) {
     exit("Run the installer from the root folder of the server.\nCurrently running from " . __DIR__);
 }
 
-system("composer install");
+if(!file_exists("vendor/")) {
+    system("composer install");
+} else {
+    system("composer update");
+}
 
 // Replace the files
 
 function putPatches() {
     global $RouteCollector_php, $SerializableClosure_php;
-    printf("Writing custom patch into %s/vendor/nikic/fast-route/src/RouteCollector.php\n", __DIR__ . "/..");
+    printf("Writing custom patch into %s/vendor/nikic/fast-route/src/RouteCollector.php\n", __DIR__ . "/Leloutama");
     file_put_contents(__DIR__ . "/../vendor/nikic/fast-route/src/RouteCollector.php", $RouteCollector_php);
-    printf("Writing custom patch into %s/vendor/jeremeamia/SuperClosure/src/SerializableClosure.php\n", __DIR__ . "/..");
+    printf("Writing custom patch into %s/vendor/jeremeamia/SuperClosure/src/SerializableClosure.php\n", __DIR__ . "/Leloutama");
     file_put_contents(__DIR__ . "/../vendor/jeremeamia/SuperClosure/src/SerializableClosure.php", $SerializableClosure_php);
-}
-
-function createLogDir() {
-    mkdir(__DIR__ . "/../src/logs");
-    file_put_contents(__DIR__ . "/../src/logs/Leloutama.log", "LELOUTAMA LOGS!\n");
 }
 
 function configureDocRoot() {
     echo "Configuring the configuration...\n";
     $config = file_get_contents(__DIR__ . "/../src/config/config.json");
     $config = json_decode($config, true);
-    $config["docRoot"] = __DIR__ . "/../ServerPages";
+    $config["DocRoot"] = __DIR__ . "/../ServerPages";
+    $config["Twig"]["DocRoot"] = __DIR__ . "/../ServerPages/twig";
     $config = json_encode($config, JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT);
     file_put_contents(__DIR__ . "/../src/config/config.json", $config);
 }
-if(file_exists(__DIR__ . "/../vendor/nikic/fast-route/src/Dispatcher.php")) {
+
+function configureLogsDir() {
+    $config = file_get_contents(__DIR__ . "/../src/config/config.json");
+    $config = json_decode($config, true);
+    if(!file_exists(__DIR__ . "/../Logs")) {
+        mkdir(__DIR__ . "/../Logs");
+    }
+    $config["Logs"] = __DIR__ . "/../Logs";
+    $config = json_encode($config, JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT);
+    file_put_contents(__DIR__ . "/../src/config/config.json", $config);
+}
+
+function createAutoloader() {
+    echo "Creating autoloader...\n";
+    require __DIR__ . "/autoloadCreation.php";
+}
+
+if(file_exists(__DIR__ . "/../vendor/")) {
     putPatches();
-    createLogDir();
     configureDocRoot();
+    configureLogsDir();
+    createAutoloader();
 } else {
-    exit("\n\nYOU SEE THAT ERROR THING OVER THERE ^^^^\nYOU SUCK AND YOUR COMPUTER SUCKS.\n*I may suck as well, but the probability is less...*\n");
+    exit("\nLooks like something's screwed... Please try to resolve the problems listed above by composer, and then try installing again!");
 }

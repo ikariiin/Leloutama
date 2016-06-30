@@ -11,6 +11,7 @@ require __DIR__ . "/Client.php";
 require __DIR__ . "/ThreadDispatcher.php";
 use FastRoute\Dispatcher;
 use Leloutama\lib\Core\Router\Router;
+use Leloutama\lib\Core\Server\Utilities\Logger;
 
 class Server {
     private $router;
@@ -38,48 +39,67 @@ class Server {
 
     private function dispatchMainThread(): callable {
         $webserverCallable = function(array $args) {
-            $stream = stream_socket_server(sprintf("tcp://%s:%d",
-                $args[2],
-                $args[3]
-            ));
-            stream_set_blocking($stream, 1);
+            try {
+                /*
+                 * Delete twig cache!
+                 */
+                TwigCacheDeletor::delete();
+                $stream = stream_socket_server(sprintf("tcp://%s:%d",
+                    $args[2],
+                    $args[3]
+                ), $errno, $errmsg);
 
-            printf("Server started successfully.\nListening on ip: %s at port: %d\n",
-                $args[2],
-                $args[3]
-            );
-            while(true) {
-                $client = stream_socket_accept($stream);
+                if(!$stream) {
+                    Logger::logServerStartUpError($errmsg);
+                    exit;
+                }
 
-                if($client) {
-                    $peerName = stream_socket_get_name($client, true);
-                    $stringHeaders = trim(fread($client, 4096));
-                    $parsedPacket = Http::parsePacket($stringHeaders);
-                    if(strlen($stringHeaders) > 0) {
-                        $ClientThread = new ThreadDispatcher(function(array $arguments, &$_this){
-                            $random = rand();
-                            $uid = hash("gost", $random);
-                            $client[$uid] = new Client($arguments[0], $arguments[1] , $arguments[2], $arguments[3]);
+                stream_set_blocking($stream, 1);
 
-                            $serveOP = $client[$uid]->serve();
-                            if(!empty($serveOP)) {
-                                $_this->response = $serveOP;
+                printf("Server started successfully.\nListening on ip: %s at port: %d\n",
+                    $args[2],
+                    $args[3]
+                );
+                while(true) {
+                    $client = stream_socket_accept($stream);
 
-                                $client[$uid] = null;
-                                unset($client[$uid]);
+                    if($client) {
+
+                        $peerName = stream_socket_get_name($client, true);
+                        $stringHeaders = trim(fread($client, 4096));
+                        $parsedPacket = Http::parsePacket($stringHeaders);
+
+                        if(strlen($stringHeaders) > 0) {
+                            $ClientThread = new ThreadDispatcher(function(array $arguments, &$_this){
+                                $random = rand();
+                                $uid = hash("gost", $random);
+                                $client[$uid] = new Client($arguments[0], $arguments[1] , $arguments[2], $arguments[3]);
+
+                                /**
+                                 * @param $serveOP Client
+                                 */
+                                $serveOP = $client[$uid]->serve();
+                                if(!empty($serveOP)) {
+                                    $_this->response = $serveOP;
+                                    $client[$uid] = null;
+                                    unset($client[$uid]);
+                                }
+
+                                return false;
+                            }, [$args[0], $args[1], $parsedPacket, $peerName]);
+
+                            $ClientThread->run() && $ClientThread->join();;
+
+                            if(isset($ClientThread->response)) {
+                                fwrite($client, $ClientThread->response);
+                                fclose($client);
                             }
-
-                            return false;
-                        }, [$args[0], $args[1], $parsedPacket, $peerName]);
-
-                        $ClientThread->run();
-
-                        if(isset($ClientThread->response)) {
-                            fwrite($client, $ClientThread->response);
-                            fclose($client);
                         }
                     }
                 }
+            } catch (\Throwable $ex) {
+                (new Logger((new Http()), file_get_contents(__DIR__ . "/../../../config/config.json")))
+                    ->logError($ex);
             }
         };
 

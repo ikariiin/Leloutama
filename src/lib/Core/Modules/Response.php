@@ -8,6 +8,7 @@
 
 namespace Leloutama\lib\Core\Utility;
 
+use Leloutama\lib\Core\Modules\ServerTwig\ServerTwig;
 use Leloutama\lib\Core\Server\Utilities\ServerContentGetter;
 
 require_once __DIR__ . "/ClientExtensionManager.php";
@@ -20,13 +21,17 @@ class Response {
     private $status;
     private $request;
     private $config;
+    private $contentFileName;
+    private $dynamicContent;
 
     public $extManager;
+    public $twig;
 
     public function __construct(Request $request) {
         $this->request = $request;
         $this->config = json_decode(file_get_contents(__DIR__ . "/../../../config/config.json"), true);
         $this->extManager = new ClientExtensionManager($request, $this->config);
+        $this->twig = new ServerTwig($this->config["Twig"]["DocRoot"]);
         return $this;
     }
 
@@ -155,7 +160,7 @@ class Response {
         $requestedURI = $request->getRequestedResource();
 
         $requestedURI = Utilities::removeDotPathSegments($requestedURI);
-        $docRoot = $this->config["docRoot"];
+        $docRoot = $this->config["DocRoot"];
 
         $fileName = $docRoot . $requestedURI;
         if(file_exists($fileName)) {
@@ -173,5 +178,64 @@ class Response {
         }
 
         return $response;
+    }
+
+    /**
+     * Content file name setter.
+     * @param string $fileName
+     * @return Response
+     */
+    public function setContentFile(string $fileName): self {
+        $this->contentFileName = $fileName;
+
+        return $this;
+    }
+
+    /**
+     * Checks if the content file name is set.
+     * @return bool
+     */
+    public function issetContentFile(): bool {
+        return (isset($this->contentFileName));
+    }
+
+    /**
+     * Content file name getter.
+     * @return string
+     */
+    public function getContentFileName(): string {
+        return $this->contentFileName;
+    }
+
+    /**
+     * Dynamic Content Setter.
+     * @return Response
+     */
+    public function setDynamicContent(): self {
+        $this->dynamicContent = true;
+
+        return $this;
+    }
+
+    public function isDynamicContent(): bool {
+        return (isset($this->dynamicContent)) ? true : false;
+    }
+
+    public function loadFromFile(string $fileName, bool $prependDocRoot = true): self {
+        if($prependDocRoot) {
+            $this->setContent(file_get_contents($this->config["DocRoot"] . $fileName));
+        } else {
+            $this->setContent(file_get_contents($fileName));
+        }
+
+        return $this;
+    }
+
+    public function useTwigTemplate(string $name, array $vars = []): self {
+        $this->twig->load($name);
+
+        $this->setContent($this->twig->getRenderedTemplate($vars));
+
+        return $this;
     }
 }

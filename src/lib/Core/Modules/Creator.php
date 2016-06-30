@@ -33,6 +33,8 @@ class Creator {
             $content = $response->getContent();
         }
 
+        $response->setContent($content);
+
         $response->setHeader("Content-Length", strlen($content));
 
         $response = (new CacheGenerator($this->config))
@@ -48,7 +50,7 @@ class Creator {
             $response->setStatus(304);
         }
 
-        (new Logger($this->http))
+        (new Logger($this->http, $this->config))
             ->logResponse(sprintf("%d %s", $response->getStatus(), Http::HTTP_REASON[$response->getStatus()]));
 
         if($response->getStatus() === 304 || $this->http->getMethod() === "HEAD") {

@@ -13,7 +13,7 @@ class ServerContentGetter {
     }
 
     public function get404(): string {
-        $html404 = file_get_contents(__DIR__ . "/../../Resources/Errors.html");
+        $html404 = file_get_contents(__DIR__ . "/../Resources/Errors.html");
 
         $vars = array(
             "%error_code%" => "404",
@@ -43,7 +43,7 @@ class ServerContentGetter {
     }
 
     public function get500(): string {
-        $html500 = file_get_contents(__DIR__ . "/../../Resources/Errors.html");
+        $html500 = file_get_contents(__DIR__ . "/../Resources/Errors.html");
 
         $vars = array(
             "%error_code%" => "500",

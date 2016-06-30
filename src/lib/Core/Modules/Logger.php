@@ -11,9 +11,16 @@ use Leloutama\lib\Core\Server\Http;
 
 class Logger {
     private $http;
+    private $config;
 
-    public function __construct(Http $http) {
+    static $logsFile;
+
+    public function __construct(Http $http, array $config) {
         $this->http = $http;
+        $this->config = $config;
+
+        self::$logsFile = $config["Logs"];
+
         return $this;
     }
 
@@ -24,8 +31,8 @@ class Logger {
             $this->http->getMethod()
         );
         echo "\nLOG LEVEL: NORMAL\n" . $request;
-        $previousContent = file_get_contents(__DIR__ . "/../../../../logs/Leloutama.log");
-        file_put_contents(__DIR__ . "/../../../../logs/Leloutama.log", $previousContent . "\nLOG LEVEL: NORMAL\n" . $request);
+
+        self::store("\nLOG LEVEL: NORMAL\n" . $request);
     }
 
     public function logResponse(string $status) {
@@ -34,8 +41,8 @@ class Logger {
             $status
         );
         echo "\nLOG LEVEL: NORMAL\n" . $response;
-        $previousContent = file_get_contents(__DIR__ . "/../../../../logs/Leloutama.log");
-        file_put_contents(__DIR__ . "/../../../../logs/Leloutama.log", $previousContent . "\nLOG LEVEL: NORMAL\n" . $response);
+
+        self::store("\nLOG LEVEL: NORMAL\n" . $response);
     }
 
     public function logError(\Throwable $ex) {
@@ -44,11 +51,30 @@ class Logger {
             $ex->getFile(),
             $ex->getLine()
         );
-        $error = "\nLOG LEVEL: ERROR";
+        $error = "\nLOG LEVEL: ERROR\n";
         $error .= "TIME: " . date("M d Y-H:i:s ") . "\n";
         $error .= "MESSAGE: " . $ex->getMessage() . "\n";
         $error .= "STACK TRACE: " . $ex->getTraceAsString() . "\n";
-        $previousContent = file_get_contents(__DIR__ . "/../../../../logs/Leloutama.log");
-        file_put_contents(__DIR__ . "/../../../../logs/Leloutama.log", $previousContent . $error);
+
+        self::store($error);
+    }
+
+    public static function logServerStartUpError(string $errstr) {
+        $error =  sprintf("Server Startup Error: %s\n", $errstr);
+        $error = "\nLOG LEVEL: ERROR\n" . $error;
+
+        echo $error;
+        self::store($error);
+    }
+
+    private static function store(string $payload) {
+        if(isset(self::$logsFile)) {
+            $logsFile = self::$logsFile;
+        } else {
+            $logsFile = json_decode(__DIR__ . "/../../../config/config.json", true)["Logs"];
+        }
+        $handle = fopen($logsFile, "a");
+        fwrite($handle, $payload);
+        fclose($handle);
     }
 }

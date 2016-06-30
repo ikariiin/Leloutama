@@ -1,20 +1,17 @@
 {
-    "docRoot": "/home/lelouch/Leloutama/install/../ServerPages",
-    "Cache-Config": {
-        "scope": "public",
-        "max-age": 120
-    },
-    "Extensions": {
-        "Client": {
-            "FileCheckr": {
-                "debug": true,
-                "error-page": "default"
-            }
-        },
-        "Server": {
-            "ErrorDocuments": {
-                "404": "%docRoot%/404.html"
-            }
-        }
-    }
+  "DocRoot": "/home/lelouch/Leloutama/cli/../ServerPages",
+  "UseDocRootMapperIfRouterNotConfigured": true,
+  "Cache-Config": {
+    "scope": "public",
+    "max-age": 120
+  },
+  "DynamicFileExtensions": [
+    "php",
+    "phtml"
+  ],
+  "Extensions": [],
+  "Logs": "/home/lelouch/Leloutama/cli/../Logs",
+  "Twig": {
+    "DocRoot": "/home/lelouch/Leloutama/cli/../ServerPages/twig"
+  }
 }

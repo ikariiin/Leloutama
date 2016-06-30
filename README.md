@@ -41,6 +41,12 @@ Now, go to `localhost:1337` and you'd get to see the sample index page!
 * Do the README (v.1.3.1)
 * (...And more stuffs...)
 
+## New Features
+
+* Supports Twig Template Usage!
+* More stable
+* Design Upgrades
+
 ## Why should you use it?
 * Supports HTTP Caching
 * Supports middleware in the form of extensions
