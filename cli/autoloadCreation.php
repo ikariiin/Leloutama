@@ -22,7 +22,7 @@ AUTOLOAD;
 foreach ($Regex as $file) {
     $file = $file[0];
     $fileName = end(explode("/", $file));
-    if($fileName !== "Client.php") {
+    if($fileName !== "Client.php" || !strpos($file, "twig.cache")) {
         $autoload .= "require_once '" . $file . "';\n";
     }
 }
