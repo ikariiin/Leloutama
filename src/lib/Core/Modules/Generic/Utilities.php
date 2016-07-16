@@ -6,7 +6,7 @@
  * Time: 10:08 PM
  */
 
-namespace Leloutama\lib\Core\Utility;
+namespace Leloutama\lib\Core\Modules\Generic;
 class Utilities {
     /**
      * Taken from, aerys/lib/Root.php

@@ -6,7 +6,9 @@
  * Time: 5:57 PM
  */
 
-namespace Leloutama\lib\Core\Utility;
+namespace Leloutama\lib\Core\Modules\Generic;
+
+use Leloutama\lib\Core\Modules\Http\Request;
 
 class ClientExtensionManager {
     private $config;

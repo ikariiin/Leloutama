@@ -6,8 +6,9 @@
  * Time: 4:55 PM
  */
 
-namespace Leloutama\lib\Core\Server\Utilities;
-use Leloutama\lib\Core\Server\Http;
+namespace Leloutama\lib\Core\Modules\Generic;
+
+use Leloutama\lib\Core\Http\Http;
 
 class Encode {
     public function __construct() {

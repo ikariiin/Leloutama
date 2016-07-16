@@ -7,11 +7,10 @@
  */
 
 namespace Leloutama\lib\Core\Server;
-require __DIR__ . "/Client.php";
-require __DIR__ . "/ThreadDispatcher.php";
 use FastRoute\Dispatcher;
-use Leloutama\lib\Core\Router\Router;
-use Leloutama\lib\Core\Server\Utilities\Logger;
+use Leloutama\lib\Core\Http\Http;
+use Leloutama\lib\Core\Http\HttpEndpoint;
+use Leloutama\lib\Core\Modules\Generic\Logger;
 
 class Server {
     private $router;
@@ -73,11 +72,13 @@ class Server {
                             $ClientThread = new ThreadDispatcher(function(array $arguments, &$_this){
                                 $random = rand();
                                 $uid = hash("gost", $random);
-                                $client[$uid] = new Client($arguments[0], $arguments[1] , $arguments[2], $arguments[3]);
 
-                                /**
-                                 * @param $serveOP Client
-                                 */
+                                $requestType = RequestTypeAnalyser::type($arguments[4]);
+                                
+                                if ($requestType === "http") {
+                                    $client[$uid] = new HttpEndpoint($arguments[0], $arguments[1] , $arguments[2], $arguments[3]);
+                                }
+
                                 $serveOP = $client[$uid]->serve();
                                 if(!empty($serveOP)) {
                                     $_this->response = $serveOP;
@@ -86,7 +87,7 @@ class Server {
                                 }
 
                                 return false;
-                            }, [$args[0], $args[1], $parsedPacket, $peerName]);
+                            }, [$args[0], $args[1], $parsedPacket, $peerName, $stringHeaders]);
 
                             $ClientThread->run() && $ClientThread->join();;
 

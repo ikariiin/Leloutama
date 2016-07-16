@@ -6,7 +6,7 @@
  * Time: 2:36 PM
  */
 
-namespace Leloutama\lib\Core\Server\Utilities;
+namespace Leloutama\lib\Core\Modules\Generic;
 class VariableWriter {
     public function __construct() {
         return $this;

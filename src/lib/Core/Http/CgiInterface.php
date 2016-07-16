@@ -7,7 +7,7 @@
  */
 
 namespace Leloutama\lib\Core\Server;
-use Leloutama\lib\Core\Utility\Response;
+use Leloutama\lib\Core\Modules\Responses\HttpResponse;
 
 class CgiInterface {
     private $http;
@@ -20,9 +20,9 @@ class CgiInterface {
      * @param Http $http
      * @param int $port
      * @param string $peerInfo
-     * @param Response $response
+     * @param HttpResponse $response
      */
-    public function __construct(Http $http, int $port, string $peerInfo, Response $response) {
+    public function __construct(Http $http, int $port, string $peerInfo, HttpResponse $response) {
         $this->http = $http;
         $this->port = $port;
         $this->peerInfo = $peerInfo;
@@ -31,7 +31,7 @@ class CgiInterface {
         $messageBody = $this->giveMessageBody();
     }
 
-    private static function analyseResponse(Response $response) {
+    private static function analyseResponse(HttpResponse $response) {
         //
     }
 

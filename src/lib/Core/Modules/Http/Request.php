@@ -6,7 +6,7 @@
  * Time: 9:43 PM
  */
 
-namespace Leloutama\lib\Core\Utility;
+namespace Leloutama\lib\Core\Modules\Http;
 
 
 class Request {
@@ -15,6 +15,7 @@ class Request {
     private $ifNoneMatch;
     private $postData = [];
     private $queryParams = [];
+    private $headers = [];
 
     public function __construct() {
         return $this;
@@ -52,8 +53,8 @@ class Request {
         return $this;
     }
 
-    public function getPostData(): array {
-        return $this->postData;
+    public function post(string $key): array {
+        return (isset($this->postData[$key])) ? $this->postData[$key] : null;
     }
 
     public function setQueryParams(array $queryParams): self {
@@ -61,7 +62,21 @@ class Request {
         return $this;
     }
 
-    public function getQueryParams(): array {
-        return $this->queryParams;
+    public function get(string $key): array {
+        return (isset($this->queryParams[$key])) ? $this->queryParams[$key] : null;
+    }
+
+    public function setHeader_Mass(array $headers): self {
+        $this->headers = $headers;
+
+        return $this;
+    }
+
+    /**
+     * @param string $key
+     * @return string|array
+     */
+    public function getHeader(string $key) {
+        return $this->headers[$key];
     }
 }

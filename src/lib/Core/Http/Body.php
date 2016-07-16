@@ -6,7 +6,7 @@
  * Time: 9:12 AM
  */
 
-namespace Leloutama\lib\Core\Server;
+namespace Leloutama\lib\Core\Http;
 class Body {
     /**
      * @var string

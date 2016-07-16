@@ -6,7 +6,7 @@
  * Time: 12:30 PM
  */
 
-namespace Leloutama\lib\Core\Utility;
+namespace Leloutama\lib\Core\Modules\Generic;
 class ServerExtensionManager {
     private $config;
     private $exts;
@@ -50,6 +50,6 @@ class ServerExtensionManager {
     }
 
     private function includeExt(string $extName) {
-        require_once __DIR__ . "/../../Ext/ServerExt/" . $extName . "/$extName.php";
+        require_once __DIR__ . "/../../Ext/ServerExt/" . $extName . "/ServerExtensionManager.php";
     }
 }

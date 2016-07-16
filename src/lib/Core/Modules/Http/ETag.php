@@ -6,7 +6,7 @@
  * Time: 10:19 PM
  */
 
-namespace Leloutama\lib\Core\Server\Utilities;
+namespace Leloutama\lib\Core\Modules\Http;
 class ETag {
     static public function getEtag(string $content) {
         $etag = crc32($content);

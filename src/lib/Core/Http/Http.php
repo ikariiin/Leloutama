@@ -1,7 +1,5 @@
 <?php
-namespace Leloutama\lib\Core\Server;
-use Leloutama\lib\Core\Router\Router;
-use Leloutama\lib\Core\Server\Utilities\Headers;
+namespace Leloutama\lib\Core\Http;
 
 
 class Http {
@@ -126,21 +124,6 @@ class Http {
         }
 
         return implode("\r\n", $headers);
-    }
-
-    public function getInfo(string $requestedRoute, Router $router) {
-        $routes = $router->getRoutes();
-        $routesCount = count($routes);
-        for($i = 0; $i < $routesCount; $i++) {
-            if($routes[$i]->getExposedRoute() == $requestedRoute) {
-                return [
-                    "response" => $routes[$i]->getResponse()
-                ];
-            } else {
-                continue;
-            }
-        }
-        return false;
     }
 
     public function getMIMEType(string $fileName): string {

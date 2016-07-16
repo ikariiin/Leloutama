@@ -6,14 +6,17 @@
  * Time: 2:30 PM
  */
 
-namespace Leloutama\lib\Core\Server\Utilities;
+namespace Leloutama\lib\Core\Modules\Http;
+
+use Leloutama\lib\Core\Modules\Generic\VariableWriter;
+
 class ServerContentGetter {
     public function __construct() {
         return $this;
     }
 
     public function get404(): string {
-        $html404 = file_get_contents(__DIR__ . "/../Resources/Errors.html");
+        $html404 = file_get_contents(__DIR__ . "/../../Resources/Errors.html");
 
         $vars = array(
             "%error_code%" => "404",
@@ -28,7 +31,7 @@ class ServerContentGetter {
     }
 
     public function get405(): string {
-        $html405 = file_get_contents(__DIR__ . "/../Resources/Errors.html");
+        $html405 = file_get_contents(__DIR__ . "/../../Resources/Errors.html");
 
         $vars = array(
             "%error_code%" => "405",
@@ -43,7 +46,7 @@ class ServerContentGetter {
     }
 
     public function get500(): string {
-        $html500 = file_get_contents(__DIR__ . "/../Resources/Errors.html");
+        $html500 = file_get_contents(__DIR__ . "/../../Resources/Errors.html");
 
         $vars = array(
             "%error_code%" => "500",

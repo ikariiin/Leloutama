@@ -6,10 +6,12 @@
  * Time: 5:22 PM
  */
 
-namespace Leloutama\lib\Core\Server\Utilities;
-use Leloutama\lib\Core\Server\Client;
-use Leloutama\lib\Core\Server\Http;
-use Leloutama\lib\Core\Utility\Response;
+namespace Leloutama\lib\Core\Modules\Http;
+use Leloutama\lib\Core\Http\Http;
+use Leloutama\lib\Core\Http\HttpEndpoint;
+use Leloutama\lib\Core\Modules\Generic\Encode;
+use Leloutama\lib\Core\Modules\Generic\Logger;
+use Leloutama\lib\Core\Modules\Responses\HttpResponse;
 
 class Creator {
     public function __construct(Http $http, array $config) {
@@ -18,7 +20,7 @@ class Creator {
         return $this;
     }
 
-    public function create(Response $response): Response {
+    public function create(HttpResponse $response): HttpResponse {
         $response->setHttpAndStatus(sprintf("HTTP/1.1 %d %s", $response->getStatus(), Http::HTTP_REASON[$response->getStatus()]));
 
         $encodeOP = (new Encode())
@@ -40,12 +42,12 @@ class Creator {
         $response = (new CacheGenerator($this->config))
             ->createCacheHeaders($response);
 
-        $response->setHeader("X-Powered-By", Client::SERVER_NAME);
+        $response->setHeader("X-Powered-By", HttpEndpoint::SERVER_NAME);
 
         return $response;
     }
 
-    public function afterFirstPhase(Response $response) {
+    public function afterFirstPhase(HttpResponse $response) {
         if($this->http->getHeaderParam("If-None-Match") === sprintf('"%d"', ETag::getEtag($response->getContent()))) {
             $response->setStatus(304);
         }

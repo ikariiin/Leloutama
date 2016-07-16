@@ -1,17 +1,17 @@
 {
-  "DocRoot": "/home/lelouch/Leloutama/cli/../ServerPages",
-  "UseDocRootMapperIfRouterNotConfigured": true,
-  "Cache-Config": {
-    "scope": "public",
-    "max-age": 120
-  },
-  "DynamicFileExtensions": [
-    "php",
-    "phtml"
-  ],
-  "Extensions": [],
-  "Logs": "/home/lelouch/Leloutama/cli/../Logs",
-  "Twig": {
-    "DocRoot": "/home/lelouch/Leloutama/cli/../ServerPages/twig"
-  }
+    "DocRoot": "/home/lelouch/Leloutama/cli/../ServerPages",
+    "UseDocRootMapperIfRouterNotConfigured": true,
+    "Cache-Config": {
+        "scope": "public",
+        "max-age": 120
+    },
+    "DynamicFileExtensions": [
+        "php",
+        "phtml"
+    ],
+    "Extensions": [],
+    "Logs": "/home/lelouch/Leloutama/cli/../Logs",
+    "Twig": {
+        "DocRoot": "/home/lelouch/Leloutama/cli/../ServerPages/twig"
+    }
 }

@@ -6,10 +6,9 @@
  * Time: 4:10 PM
  */
 
-namespace Leloutama\lib\Core\Server\Utilities;
-use Leloutama\lib\Core\Server\Body;
-use Leloutama\lib\Core\Server\Http;
-use Leloutama\lib\Core\Utility\Request;
+namespace Leloutama\lib\Core\Modules\Http;
+use Leloutama\lib\Core\Http\Body;
+use Leloutama\lib\Core\Http\Http;
 
 class RequestBuilder {
     public function __construct() {
@@ -23,7 +22,8 @@ class RequestBuilder {
         $request = (new Request)
             ->setCookies($cookies)
             ->setRequestedResource($requestedResource)
-            ->setIfNoneMatch($http->getHeaderParam("If-None-Match"));
+            ->setIfNoneMatch($http->getHeaderParam("If-None-Match"))
+            ->setHeader_Mass($http->getParsedHeaders());
 
         if($http->getMethod() === "POST") {
             $request->setPostData([

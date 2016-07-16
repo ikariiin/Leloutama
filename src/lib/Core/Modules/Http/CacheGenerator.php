@@ -6,8 +6,8 @@
  * Time: 8:03 AM
  */
 
-namespace Leloutama\lib\Core\Server\Utilities;
-use Leloutama\lib\Core\Utility\Response;
+namespace Leloutama\lib\Core\Modules\Http;
+use Leloutama\lib\Core\Modules\Responses\HttpResponse;
 
 class CacheGenerator {
     private $config;
@@ -16,7 +16,7 @@ class CacheGenerator {
         $this->config = $config;
     }
 
-    public function createCacheHeaders(Response $response) {
+    public function createCacheHeaders(HttpResponse $response) {
         $scope = (isset($this->config["Cache-Config"]["scope"])) ? "public" : $this->config["Cache-Config"]["scope"];
         $maxAge = (isset($this->config["Cache-Config"]["max-age"])) ? 120 : $this->config["Cache-Config"]["max-age"];
 

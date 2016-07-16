@@ -6,20 +6,19 @@
  * Time: 10:28 PM
  */
 
-namespace Leloutama\lib\Core\Server;
-
-//require_once __DIR__ . "/autoloads.php";
+namespace Leloutama\lib\Core\Http;
 
 use FastRoute\Dispatcher;
-use Leloutama\lib\Core\Server\Utilities\Creator;
-use Leloutama\lib\Core\Server\Utilities\Logger;
-use Leloutama\lib\Core\Server\Utilities\RequestBuilder;
-use Leloutama\lib\Core\Utility\Response;
+use Leloutama\lib\Core\Interfaces\Endpoint;
+use Leloutama\lib\Core\Modules\Http\Creator;
+use Leloutama\lib\Core\Modules\Generic\Logger;
+use Leloutama\lib\Core\Modules\Http\RequestBuilder;
+use Leloutama\lib\Core\Modules\Responses\HttpResponse;
 use SuperClosure\Serializer;
-use Leloutama\lib\Core\Server\Utilities\ServerContentGetter;
-use Leloutama\lib\Core\Utility\ServerExtensionManager;
+use Leloutama\lib\Core\Modules\Http\ServerContentGetter;
+use Leloutama\lib\Core\Modules\Generic\ServerExtensionManager;
 
-class Client {
+class HttpEndpoint implements Endpoint{
     /* Protected Vars */
     protected $router;
     protected $http;
@@ -119,7 +118,7 @@ class Client {
         catch (\Throwable $ex) {
             (new Logger($this->http, $this->config))
                 ->logError($ex);
-            $response = (new Response($this->request))
+            $response = (new HttpResponse($this->request))
                 ->setContent((new ServerContentGetter())
                     ->get500())
                 ->setMime("text/html")
@@ -148,10 +147,10 @@ class Client {
     }
 
     /**
-     * @return Response
+     * @return HttpResponse
      */
-    private function process(): Response {
-        $response = (new Response($this->request))
+    private function process(): HttpResponse {
+        $response = (new HttpResponse($this->request))
             ->setContent((new ServerContentGetter())
                 ->get500())
             ->setMime("text/html")
@@ -162,10 +161,10 @@ class Client {
         switch ($routeInfo[0]) {
             case Dispatcher::NOT_FOUND:
                 if(isset($this->config["UseDocRootMapperIfRouterNotConfigured"]) && $this->config["UseDocRootMapperIfRouterNotConfigured"]) {
-                    $response = (new Response($this->request))
+                    $response = (new HttpResponse($this->request))
                         ->map();
                 } else {
-                    $response = (new Response($this->request))
+                    $response = (new HttpResponse($this->request))
                         ->setContent((new ServerContentGetter())
                             ->get404())
                         ->setStatus(404)
@@ -173,7 +172,7 @@ class Client {
                 }
                 break;
             case Dispatcher::METHOD_NOT_ALLOWED:
-                $response = (new Response($this->request))
+                $response = (new HttpResponse($this->request))
                     ->setContent((new ServerContentGetter())
                         ->get405())
                     ->setMime("text/html")
@@ -206,7 +205,7 @@ class Client {
         return implode("\r\n", explode("\n", $body));
     }
 
-    private function create(Response $response): Response {
+    private function create(HttpResponse $response): HttpResponse {
         $creator = new Creator($this->http, $this->config);
         $response = $creator->create($response);
 

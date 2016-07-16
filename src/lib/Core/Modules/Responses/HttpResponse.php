@@ -6,15 +6,16 @@
  * Time: 10:49 PM
  */
 
-namespace Leloutama\lib\Core\Utility;
+namespace Leloutama\lib\Core\Modules\Responses;
 
 use Leloutama\lib\Core\Modules\ServerTwig\ServerTwig;
-use Leloutama\lib\Core\Server\Utilities\ServerContentGetter;
+use Leloutama\lib\Core\Modules\Http\ServerContentGetter;
+use Leloutama\lib\Core\Modules\Generic\ClientExtensionManager;
+use Leloutama\lib\Core\Modules\Http\Request;
+use Leloutama\lib\Core\Modules\Generic\Utilities;
 
-require_once __DIR__ . "/ClientExtensionManager.php";
-require_once __DIR__ . "/Utilities.php";
 
-class Response {
+class HttpResponse implements Response {
     private $content;
     private $mime;
     private $headers;
@@ -29,7 +30,7 @@ class Response {
 
     public function __construct(Request $request) {
         $this->request = $request;
-        $this->config = json_decode(file_get_contents(__DIR__ . "/../../../config/config.json"), true);
+        $this->config = json_decode(file_get_contents(__DIR__ . "/../../../../config/config.json"), true);
         $this->extManager = new ClientExtensionManager($request, $this->config);
         $this->twig = new ServerTwig($this->config["Twig"]["DocRoot"]);
         return $this;
@@ -38,7 +39,7 @@ class Response {
     /**
      * Content setter.
      * @param string $content
-     * @return Response $this
+     * @return HttpResponse
      */
     public function setContent(string $content): self {
         // Set the content in this object.
@@ -60,7 +61,7 @@ class Response {
     /**
      * MIME Type setter.
      * @param string $mime
-     * @return Response
+     * @return HttpResponse
      */
     public function setMime(string $mime): self {
         $this->mime = $mime;
@@ -88,7 +89,7 @@ class Response {
     /**
      * Status setter.
      * @param int $status
-     * @return Response
+     * @return HttpResponse
      */
     public function setStatus(int $status): self {
         $this->status = $status;
@@ -107,7 +108,7 @@ class Response {
     /**
      * Method to set the HTTP version and the status of the response.
      * @param string $httpVersionAndStatus
-     * @return Response
+     * @return HttpResponse
      */
     public function setHttpAndStatus(string $httpVersionAndStatus): self {
         $this->headers["top"] = $httpVersionAndStatus;
@@ -119,7 +120,7 @@ class Response {
      * Normal headers setter.
      * @param string $key
      * @param string $value
-     * @return Response
+     * @return HttpResponse
      */
     public function setHeader(string $key, string $value): self {
         $this->headers[$key] = $value;
@@ -164,12 +165,12 @@ class Response {
 
         $fileName = $docRoot . $requestedURI;
         if(file_exists($fileName)) {
-            $response = (new Response($this->request))
+            $response = (new HttpResponse($this->request))
                 ->setContent(file_get_contents($fileName))
                 ->setMime("text/html")
                 ->setStatus(200);
         } else {
-            $response = (new Response($this->request))
+            $response = (new HttpResponse($this->request))
                 ->setContent((new ServerContentGetter())
                     ->get404()
                 )
@@ -183,7 +184,7 @@ class Response {
     /**
      * Content file name setter.
      * @param string $fileName
-     * @return Response
+     * @return HttpResponse
      */
     public function setContentFile(string $fileName): self {
         $this->contentFileName = $fileName;
@@ -209,7 +210,7 @@ class Response {
 
     /**
      * Dynamic Content Setter.
-     * @return Response
+     * @return HttpResponse
      */
     public function setDynamicContent(): self {
         $this->dynamicContent = true;
