@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Leloutama - A multi-threaded webserver written in PHP.</title>
+    <link href="bootswatch.min.css" rel="stylesheet">
+</head>
+<body>
+<div class="jumbotron container" id="heading">
+    <a href="https://github.com/SaitamaSama/Leloutama"><h1>Leloutama</h1></a>
+    <p>Leloutama is a multi threaded web server app written in PHP.</p>
+    <a href="https://github.com/SaitamaSama/Leloutama/releases/tag/1.3" class="btn btn-lg btn-primary">Latest Release</a>
+</div>
+<div class="container" id="get-started">
+    <h1>Get started</h1>
+    <pre>$ git clone https://github.com/SaitamaSama/Leloutama && cd Leloutama
+$ cli/install
+...
+$ cli/run --router examples/router.example.php
+...</pre>
+</div>
+<div class="container" id="main">
+    <h1>Features</h1>
+    <ul>
+        <li>Supports middlewares in the form of extensions</li>
+        <li>Supports <code>gzip</code> and <code>deflate</code> output compression</li>
+        <li>Supports HTTP Caching</li>
+        <li>Supports friendly urls</li>
+        <li>Supports twig templating engine</li>
+        <li>No additional softwares except <code>PHP</code></li>
+        <li>Beautifully designed codebase ... ?</li>
+    </ul>
+    <h1>Drawbacks</h1>
+    <ul>
+        <li>Is not stable</li>
+        <li>No SSL/TLS support</li>
+        <li>No support for websocket till now</li>
+        <li>Un-Documented codebase</li>
+    </ul>
+    <h1>! Important !</h1>
+    <div class="alert alert-warning">Currently there is an problem that the server seg faults after running for a while.</div>
+</div>
+<div class="container" id="pr">
+    <h1>Pull Requests</h1>
+    You are more than welcomed to create some PRs. &nbsp;&nbsp;&nbsp;
+    <a class="btn btn-lg btn-primary" href="https://github.com/SaitamaSama/Leloutama/compare">Create a PR</a>
+</div>
+<div class="container" id="todo">
+    <h1>ToDo</h1>
+    <ul>
+        <li>Support Websocket</li>
+        <li>Support <code>HTTP/2</code></li>
+        <li>Support CGI</li>
+        <li>Implement doc-blocks</li>
+        <li>Implement SSL/TLS</li>
+    </ul>
+</div>
+<div class="container" id="help">
+    <h1>Need help!</h1>
+    <p>
+        If you can possibly help me with the following:
+    </p>
+    <ul>
+        <li>WebSocket Implementation</li>
+        <li>Seg Fault Detection</li>
+    </ul>
+    <p>
+        It would be great! To contribute just do a <a href="#pr">PR</a>!
+        <br>Cheers!
+    </p>
+</div>
+<footer class="container well-lg text-center " id="footer">
+    Created by <a href="https://github.com/SaitamaSama">SaitamaSama</a>. Git hub repo: <a href="https://github.com/SaitamaSama/Leloutama">https://github.com/SaitamaSama/Leloutama</a>
+    <br>
+    License: <a href="https://www.gnu.org/licenses/gpl-3.0.en.html">GNU GPL v3</a>
+</footer>
+</body>
+</html>
