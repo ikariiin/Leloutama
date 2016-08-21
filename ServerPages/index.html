@@ -2,100 +2,77 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Leloutama</title>
-    <style>
-        * {
-            transition: 0.4s all;
-        }
-
-        ::selection {
-            background-color: #333234;
-            color: #FFFFFF;
-        }
-
-        body {
-            font-family: "Roboto Light", Roboto, Arial, sans-serif;
-            font-size: 16px;
-            background-color: #212121;
-            color: #FFFFFF;
-        }
-
-        .jumbotron {
-            background-color: #5418B3;
-            border-radius: 4px;
-            box-shadow: 0 0 4px #232323;
-            width: 96%;
-            padding: 2%;
-        }
-
-        .jumbotron h1 {
-            font-size: 70px;
-            color: #1BB32C;
-            text-shadow: 2px 1px 5px #49AF54;
-            margin-bottom: 30px;
-        }
-
-        code {
-            background-color: #ededed;
-            border-radius: 4px;
-            color: crimson;
-            display: inline-block;
-            padding: 3px;
-            font-size: 14px;
-            font-family: monospace;
-        }
-
-        hr {
-            width: 40%;
-            margin-top: 25px;
-        }
-
-        a {
-            color: #009688;
-            text-decoration: none;
-        }
-
-        a:hover {
-            text-decoration: underline;
-        }
-
-        a:visited {
-            color: #009688;
-        }
-    </style>
+    <title>Leloutama - A multi-threaded webserver written in PHP.</title>
+    <link href="bootswatch.min.css" rel="stylesheet">
 </head>
 <body>
-<div class="jumbotron">
-    <h1>Leloutama</h1>
-    <small>An web-server written entirely in PHP, along with multi-threading.</small>
+<div class="jumbotron container" id="heading">
+    <a href="https://github.com/SaitamaSama/Leloutama"><h1>Leloutama</h1></a>
+    <p>Leloutama is a multi threaded web server app written in PHP.</p>
+    <a href="https://github.com/SaitamaSama/Leloutama/releases/tag/1.3" class="btn btn-lg btn-primary">Latest Release</a>
+</div>
+<div class="container" id="get-started">
+    <h1>Get started</h1>
+    <pre>$ git clone https://github.com/SaitamaSama/Leloutama && cd Leloutama
+$ cli/install
+...
+$ cli/run --router examples/router.example.php
+...</pre>
+</div>
+<div class="container" id="main">
+    <h1>Features</h1>
+    <ul>
+        <li>Supports middlewares in the form of extensions</li>
+        <li>Supports <code>gzip</code> and <code>deflate</code> output compression</li>
+        <li>Supports HTTP Caching</li>
+        <li>Supports friendly urls</li>
+        <li>Supports twig templating engine</li>
+        <li>No additional softwares except <code>PHP</code></li>
+        <li>Beautifully designed codebase ... ?</li>
+    </ul>
+    <h1>Drawbacks</h1>
+    <ul>
+        <li>Is not stable</li>
+        <li>No SSL/TLS support</li>
+        <li>No support for websocket till now</li>
+        <li>Un-Documented codebase</li>
+    </ul>
+    <h1>! Important !</h1>
+    <div class="alert alert-warning">Currently there is an problem that the server seg faults after running for a while.</div>
+</div>
+<div class="container" id="pr">
+    <h1>Pull Requests</h1>
+    You are more than welcomed to create some PRs. &nbsp;&nbsp;&nbsp;
+    <a class="btn btn-lg btn-primary" href="https://github.com/SaitamaSama/Leloutama/compare">Create a PR</a>
+</div>
+<div class="container" id="todo">
+    <h1>ToDo</h1>
+    <ul>
+        <li>Support Websocket</li>
+        <li>Support <code>HTTP/2</code></li>
+        <li>Support CGI</li>
+        <li>Implement doc-blocks</li>
+        <li>Implement SSL/TLS</li>
+    </ul>
+</div>
+<div class="container" id="help">
+    <h1>Need help!</h1>
     <p>
-        You successfully started the web-server, and this is the default page of the server.
+        If you can possibly help me with the following:
+    </p>
+    <ul>
+        <li>WebSocket Implementation</li>
+        <li>Seg Fault Detection</li>
+    </ul>
+    <p>
+        It would be great! To contribute just do a <a href="#pr">PR</a>!
+        <br>Cheers!
     </p>
 </div>
-
-<br>
-<br>
-<div><a href="/post">Test Sending A POST Request</a></div>
-<br>
-<br>
-
-<h2>Where is this page's source located?</h2>
-This html page can be found in here: <code>/path/to/Leloutama/src/lib/Ext/ServerPages/index.html</code>, and if you wish to edit it you
-can but it is rather recommended to create another file in the <code>DocumentRoot</code> directory, and create a router
-to point to it, and start the server.
-<hr color="#FFF" size="1px">
-<h2>Which router does it use?</h2>
-C'mon you should know the router, because you must have started the <code>cli/run.php</code> with those arguments, didn't you? Well, you
-know, so the router is most probably <code>/path/to/Leloutama/examples/router.example.php</code> unless you've done something clever ;-)
-<hr color="#FFF" size="1px">
-<h2>What's next?</h2>
-Create a router, invoke <code><span style="color: cornflowerblue">shit@shitty-pc</span> <span style="color: #49AF54">/path/to/Leloutama</span> <span style="color: #5418B3">$</span> php cli/run.php --host &lt;HOST_NAME&gt; --port &lt;YOUR_PORT&gt; --router &lt;/path/to/router.php&gt;</code>
-, and... PROFIT!
-<hr color="#FFF" size="1px">
-<h2>Have a problem?</h2>
-Contact me @ <a href="mailto:ping@gourab.me">ping@gourab.me</a> or open up a new issue in <a href="https://github.com/gourabnagDev/Leloutama/issues/new">the github repo</a>.
-<hr>
-<h2>Who built this?</h2>
-<a href="#">???</a>
+<footer class="container well-lg text-center " id="footer">
+    Created by <a href="https://github.com/SaitamaSama">SaitamaSama</a>. Git hub repo: <a href="https://github.com/SaitamaSama/Leloutama">https://github.com/SaitamaSama/Leloutama</a>
+    <br>
+    License: <a href="https://www.gnu.org/licenses/gpl-3.0.en.html">GNU GPL v3</a>
+</footer>
 </body>
 </html>

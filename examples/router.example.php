@@ -3,7 +3,7 @@ $dispatcher = \FastRoute\simpleDispatcher(function (\FastRoute\RouteCollector $r
     $r->addRoute("GET", "/", function ($request, $vars) {
         $response = (new \Leloutama\lib\Core\Modules\Responses\HttpResponse($request));
         $response
-            ->loadFromFile("/index.html")
+            ->setContent("ohai")
             ->setMime("text/html")
             ->setStatus(200);
 

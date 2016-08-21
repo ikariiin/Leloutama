@@ -8,6 +8,7 @@
 
 namespace Leloutama\lib\Core\Modules\Responses;
 
+use Leloutama\lib\Core\Modules\Generic\MimeDiscoverer;
 use Leloutama\lib\Core\Modules\ServerTwig\ServerTwig;
 use Leloutama\lib\Core\Modules\Http\ServerContentGetter;
 use Leloutama\lib\Core\Modules\Generic\ClientExtensionManager;
@@ -154,9 +155,9 @@ class HttpResponse implements Response {
 
     /**
      * Maps the incoming request to the requested file, in the document root!
-     * @return Response
+     * @return HttpResponse
      */
-    public function map() {
+    public function map(): HttpResponse {
         $request = $this->request;
         $requestedURI = $request->getRequestedResource();
 
@@ -164,10 +165,18 @@ class HttpResponse implements Response {
         $docRoot = $this->config["DocRoot"];
 
         $fileName = $docRoot . $requestedURI;
-        if(file_exists($fileName)) {
+        if(file_exists($fileName) && !is_dir($fileName) && end(explode("/", $fileName)) !== "") {
+            $extension = end(explode(".", $requestedURI));
+
+            if(strlen($extension) !== 0 && strpos($extension, ".")) {
+                $mimeDiscoverer = new MimeDiscoverer($extension);
+                $mime = $mimeDiscoverer->getMimeType();
+            } else {
+                $mime = "text/plain";
+            }
             $response = (new HttpResponse($this->request))
                 ->setContent(file_get_contents($fileName))
-                ->setMime("text/html")
+                ->setMime($mime)
                 ->setStatus(200);
         } else {
             $response = (new HttpResponse($this->request))
