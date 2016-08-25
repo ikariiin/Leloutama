@@ -15,9 +15,7 @@ class RequestTypeAnalyser {
          * request for these two protocol only. 
          */
 
-        return "http";
-
-        if(strpos($rawRequest, "\r\n\r\n")) {
+        if(strpos($rawRequest, "\r\n")) {
             return "http";
         } else {
             return "websocket";

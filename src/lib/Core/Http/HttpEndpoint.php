@@ -9,11 +9,14 @@
 namespace Leloutama\lib\Core\Http;
 
 use FastRoute\Dispatcher;
+use Leloutama\lib\Core\Exceptions\InvalidResponseException;
 use Leloutama\lib\Core\Interfaces\Endpoint;
 use Leloutama\lib\Core\Modules\Http\Creator;
 use Leloutama\lib\Core\Modules\Generic\Logger;
 use Leloutama\lib\Core\Modules\Http\RequestBuilder;
 use Leloutama\lib\Core\Modules\Responses\HttpResponse;
+use Leloutama\lib\Core\Websocket\Handshake;
+use Leloutama\lib\Core\Websocket\IsWebsocketHandshake;
 use SuperClosure\Serializer;
 use Leloutama\lib\Core\Modules\Http\ServerContentGetter;
 use Leloutama\lib\Core\Modules\Generic\ServerExtensionManager;
@@ -102,6 +105,12 @@ class HttpEndpoint implements Endpoint{
 
             $this->buildRequest();
 
+            if((new IsWebsocketHandshake($this->request))->is()) {
+                $routeInfo = $this->router->dispatch("GET", $this->http->getRequestedResource());
+                return (new Handshake($this->request, $routeInfo))
+                    ->getRawResponse();
+            }
+
             (new Logger($this->http, $this->config))
                 ->logRequest();
 
@@ -160,41 +169,70 @@ class HttpEndpoint implements Endpoint{
         $routeInfo = $fastRouter->dispatch($this->http->getMethod(), $this->http->getRequestedResource());
         switch ($routeInfo[0]) {
             case Dispatcher::NOT_FOUND:
-                if(isset($this->config["UseDocRootMapperIfRouterNotConfigured"]) && $this->config["UseDocRootMapperIfRouterNotConfigured"]) {
-                    $response = (new HttpResponse($this->request))
-                        ->map();
-                } else {
-                    $response = (new HttpResponse($this->request))
-                        ->setContent((new ServerContentGetter())
-                            ->get404())
-                        ->setStatus(404)
-                        ->setMime("text/html");
-                }
+                $response = $this->handleNotFoundRoute();
                 break;
             case Dispatcher::METHOD_NOT_ALLOWED:
-                $response = (new HttpResponse($this->request))
-                    ->setContent((new ServerContentGetter())
-                        ->get405())
-                    ->setMime("text/html")
-                    ->setStatus(405);
+                $response = $this->handleMethodNotFoundRoute();
                 break;
             case Dispatcher::FOUND:
-                $handler = $routeInfo[1];
-                // Deserialize the handler if it isn't already
-
-                if(!($handler instanceof \Closure)) {
-                    $serializer = new Serializer();
-                    // Deserialize the handler
-                    $handler = $serializer->unserialize($handler);
-                }
-                $vars = $routeInfo[2];
-
-                // Invoke the handler
-                $response = $handler($this->request, $vars);
+                $response = $this->handleFoundRoute($routeInfo);
                 break;
         }
 
         return $this->create($response);
+    }
+
+    /**
+     * @param array $routeInfo
+     * @return HttpResponse
+     * @throws InvalidResponseException
+     */
+    private function handleFoundRoute(array $routeInfo): HttpResponse {
+        $handler = $routeInfo[1];
+        // Deserialize the handler if it isn't already
+
+        if(!($handler instanceof \Closure)) {
+            $serializer = new Serializer();
+            // Deserialize the handler
+            $handler = $serializer->unserialize($handler);
+        }
+        $vars = $routeInfo[2];
+
+        // Invoke the handler
+        $response = $handler($this->request, $vars);
+
+        if(!($response instanceof HttpResponse)) {
+            throw new InvalidResponseException("The response passed to a HTTP request must be an instance of HttpResponse");
+        }
+        
+        return $response;
+    }
+
+    /**
+     * @return HttpResponse
+     */
+    private function handleMethodNotFoundRoute() {
+        return (new HttpResponse($this->request))
+            ->setContent((new ServerContentGetter())
+                ->get405())
+            ->setMime("text/html")
+            ->setStatus(405);
+    }
+
+    /**
+     * @return HttpResponse
+     */
+    private function handleNotFoundRoute() {
+        if(isset($this->config["UseDocRootMapperIfRouterNotConfigured"]) && $this->config["UseDocRootMapperIfRouterNotConfigured"]) {
+            return (new HttpResponse($this->request))
+                ->map();
+        } else {
+            return (new HttpResponse($this->request))
+                ->setContent((new ServerContentGetter())
+                    ->get404())
+                ->setStatus(404)
+                ->setMime("text/html");
+        }
     }
 
     /**

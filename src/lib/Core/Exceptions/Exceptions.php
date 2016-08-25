@@ -6,10 +6,4 @@
  */
 
 namespace Leloutama\lib\Core\Exceptions;
-class Exceptions extends \Exception {
-    private $_file;
-    public function __construct(string $message, int $code, string $file) {
-        parent::__construct($message, $code);
-        $this->_file = $file;
-    }
-}
+class InvalidResponseException extends \Exception {}

@@ -63,12 +63,11 @@ class Server {
                     $client = stream_socket_accept($stream);
 
                     if($client) {
-
                         $peerName = stream_socket_get_name($client, true);
-                        $stringHeaders = trim(fread($client, 4096));
-                        $parsedPacket = Http::parsePacket($stringHeaders);
+                        $sentString = trim(fread($client, 4096));
+                        $parsedPacket = Http::parsePacket($sentString);
 
-                        if(strlen($stringHeaders) > 0) {
+                        if(strlen($sentString) > 0) {
                             $ClientThread = new ThreadDispatcher(function(array $arguments, &$_this){
                                 $random = rand();
                                 $uid = hash("gost", $random);
@@ -77,6 +76,8 @@ class Server {
                                 
                                 if ($requestType === "http") {
                                     $client[$uid] = new HttpEndpoint($arguments[0], $arguments[1] , $arguments[2], $arguments[3]);
+                                } elseif($requestType === "websocket") {
+                                    var_dump($arguments);
                                 }
 
                                 $serveOP = $client[$uid]->serve();
@@ -87,7 +88,7 @@ class Server {
                                 }
 
                                 return false;
-                            }, [$args[0], $args[1], $parsedPacket, $peerName, $stringHeaders]);
+                            }, [$args[0], $args[1], $parsedPacket, $peerName, $sentString]);
 
                             $ClientThread->run() && $ClientThread->join();;
 

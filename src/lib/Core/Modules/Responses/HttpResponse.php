@@ -168,7 +168,7 @@ class HttpResponse implements Response {
         if(file_exists($fileName) && !is_dir($fileName) && end(explode("/", $fileName)) !== "") {
             $extension = end(explode(".", $requestedURI));
 
-            if(strlen($extension) !== 0 && strpos($extension, ".")) {
+            if(strlen($extension) !== 0) {
                 $mimeDiscoverer = new MimeDiscoverer($extension);
                 $mime = $mimeDiscoverer->getMimeType();
             } else {

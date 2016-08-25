@@ -11,15 +11,5 @@ namespace Leloutama\lib\Core\Modules\Responses;
 use Leloutama\lib\Core\Websocket\WebsocketHandlerInterface;
 
 class WebsocketResponse implements Response {
-    private $handler;
-
-    public function __construct() {
-        return $this;
-    }
-
-    public function registerWsHandler(WebsocketHandlerInterface $websocketHandler): self {
-        $this->handler = $websocketHandler;
-
-        return $this;
-    }
+    //
 }

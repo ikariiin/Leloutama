@@ -12,7 +12,7 @@ if(!file_exists(__DIR__ . "/../vendor/")) {
 require_once __DIR__ . "/../vendor/autoload.php";
 require_once __DIR__ . "/../autoloads/autoloader.php";
 
-$host = "127.0.0.1";
+$host = "0.0.0.0";
 
 $port = 1337;
 
