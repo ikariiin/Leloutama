@@ -20,6 +20,6 @@ class ThreadDispatcher extends \Thread {
 
     public function run() {
         $ToPerform = $this->ToPerform;
-        return $ToPerform($this->arguments, $this);
+        return $ToPerform($this, ...$this->arguments);
     }
 }

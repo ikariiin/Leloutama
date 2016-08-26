@@ -8,6 +8,10 @@
 
 namespace Leloutama\lib\Core\Server;
 
+use Leloutama\lib\Core\Http\Http;
+use Leloutama\lib\Core\Modules\Http\Request;
+use Leloutama\lib\Core\Websocket\IsWebsocketHandshake;
+
 class RequestTypeAnalyser {
     public static function type(string $rawRequest) {
         /* 
@@ -16,6 +20,15 @@ class RequestTypeAnalyser {
          */
 
         if(strpos($rawRequest, "\r\n")) {
+            $http = (new Http($rawRequest));
+            $http->Headerize();
+            $http->parseHeaders();
+            $request = (new Request())
+                ->setHeader_Mass($http->getParsedHeaders());
+            echo $request->getHeader("Upgrade");
+            if((new IsWebsocketHandshake($request))->is()) {
+                return "websocket-handshake";
+            }
             return "http";
         } else {
             return "websocket";

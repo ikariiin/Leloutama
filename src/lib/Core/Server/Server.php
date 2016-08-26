@@ -37,15 +37,15 @@ class Server {
     }
 
     private function dispatchMainThread(): callable {
-        $webserverCallable = function(array $args) {
+        $webserverCallable = function(&$_this, Dispatcher $dispatcher, array $exts, string $ipAddress, int $port) {
             try {
                 /*
                  * Delete twig cache!
                  */
                 TwigCacheDeletor::delete();
                 $stream = stream_socket_server(sprintf("tcp://%s:%d",
-                    $args[2],
-                    $args[3]
+                    $ipAddress,
+                    $port
                 ), $errno, $errmsg);
 
                 if(!$stream) {
@@ -56,8 +56,8 @@ class Server {
                 stream_set_blocking($stream, 1);
 
                 printf("Server started successfully.\nListening on ip: %s at port: %d\n",
-                    $args[2],
-                    $args[3]
+                    $ipAddress,
+                    $port
                 );
                 while(true) {
                     $client = stream_socket_accept($stream);
@@ -65,37 +65,33 @@ class Server {
                     if($client) {
                         $peerName = stream_socket_get_name($client, true);
                         $sentString = trim(fread($client, 4096));
-                        $parsedPacket = Http::parsePacket($sentString);
+                        $requestType = RequestTypeAnalyser::type($sentString);
 
-                        if(strlen($sentString) > 0) {
-                            $ClientThread = new ThreadDispatcher(function(array $arguments, &$_this){
+                        if ($requestType === "http" && strlen($sentString) > 0) {
+                            $parsedPacket = Http::parsePacket($sentString);
+
+                            $ClientThread = new ThreadDispatcher(function (&$_this, Dispatcher $dispatcher, array $exts, array $packet, string $peername) {
                                 $random = rand();
                                 $uid = hash("gost", $random);
-
-                                $requestType = RequestTypeAnalyser::type($arguments[4]);
-                                
-                                if ($requestType === "http") {
-                                    $client[$uid] = new HttpEndpoint($arguments[0], $arguments[1] , $arguments[2], $arguments[3]);
-                                } elseif($requestType === "websocket") {
-                                    var_dump($arguments);
-                                }
-
+                                $client[$uid] = new HttpEndpoint($dispatcher, $exts, $packet, $peername);
                                 $serveOP = $client[$uid]->serve();
-                                if(!empty($serveOP)) {
+                                if (!empty($serveOP)) {
                                     $_this->response = $serveOP;
                                     $client[$uid] = null;
                                     unset($client[$uid]);
                                 }
 
                                 return false;
-                            }, [$args[0], $args[1], $parsedPacket, $peerName, $sentString]);
+                            }, [$dispatcher, $exts, $parsedPacket, $peerName, $sentString]);
 
                             $ClientThread->run() && $ClientThread->join();;
 
-                            if(isset($ClientThread->response)) {
+                            if (isset($ClientThread->response)) {
                                 fwrite($client, $ClientThread->response);
                                 fclose($client);
                             }
+                        } elseif ($requestType === "websocket-handshake") {
+                            echo "hai";
                         }
                     }
                 }
