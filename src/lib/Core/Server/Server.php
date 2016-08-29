@@ -8,9 +8,13 @@
 
 namespace Leloutama\lib\Core\Server;
 use FastRoute\Dispatcher;
+use Leloutama\lib\Core\Http\Body;
 use Leloutama\lib\Core\Http\Http;
 use Leloutama\lib\Core\Http\HttpEndpoint;
 use Leloutama\lib\Core\Modules\Generic\Logger;
+use Leloutama\lib\Core\Modules\Http\Request;
+use Leloutama\lib\Core\Modules\Http\RequestBuilder;
+use Leloutama\lib\Core\Websocket\Handshake;
 
 class Server {
     private $router;
@@ -67,11 +71,11 @@ class Server {
                         $sentString = trim(fread($client, 4096));
                         $requestType = RequestTypeAnalyser::type($sentString);
 
-                        if ($requestType === "http" && strlen($sentString) > 0) {
+                        if ($requestType[0] === "http" && strlen($sentString) > 0) {
                             $parsedPacket = Http::parsePacket($sentString);
 
                             $ClientThread = new ThreadDispatcher(function (&$_this, Dispatcher $dispatcher, array $exts, array $packet, string $peername) {
-                                $random = rand();
+                                $random = mt_rand();
                                 $uid = hash("gost", $random);
                                 $client[$uid] = new HttpEndpoint($dispatcher, $exts, $packet, $peername);
                                 $serveOP = $client[$uid]->serve();
@@ -90,8 +94,27 @@ class Server {
                                 fwrite($client, $ClientThread->response);
                                 fclose($client);
                             }
-                        } elseif ($requestType === "websocket-handshake") {
-                            echo "hai";
+                        } elseif ($requestType[0] === "websocket-handshake") {
+                            $body = new Body();
+                            $body->load($sentString);
+                            $http = $requestType[1];
+                            $request = (new RequestBuilder())
+                                ->buildRequest($http, $body);
+
+                            $socket = new Socket($client);
+
+                            $ListenerThread = new ThreadDispatcher(function (&$_this, Dispatcher $dispatcher, Socket $client, Request $request){
+                                $stream = $client->getStream();
+                                $routeInfo = $dispatcher->dispatch("GET", $request->getRequestedResource());
+                                $websocketHandshake = new Handshake($request, $routeInfo);
+                                fwrite($stream, $websocketHandshake->getRawResponse());
+
+                                while(($out = fread($stream, 4096 * 2))) {
+                                    var_dump($out);
+                                }
+                            }, [$dispatcher, $socket, $request]);
+
+                            $ListenerThread->start();
                         }
                     }
                 }

@@ -1,6 +1,8 @@
 # Leloutama
 A multi-threaded webserver, written entirely in PHP.
 
+> **DO NOT USE CURRENT MASTER RATHER A RELEASE SOURCE. THINGS ARE BREAKING, AND WILL BREAK UNTIL THE NEXT RELEASE. YOU'VE BEEN WARNED.**
+
 ### Requirements
 * PHP version >= 7, and a thread safe build
 * The [pthreads](https://github.com/krakjoe/pthreads) extension for PHP.

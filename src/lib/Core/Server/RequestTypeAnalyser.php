@@ -13,7 +13,7 @@ use Leloutama\lib\Core\Modules\Http\Request;
 use Leloutama\lib\Core\Websocket\IsWebsocketHandshake;
 
 class RequestTypeAnalyser {
-    public static function type(string $rawRequest) {
+    public static function type(string $rawRequest): array {
         /* 
          * Currently since the server only promises to implement Websocket and Http Protocol, this only analyses the
          * request for these two protocol only. 
@@ -25,11 +25,10 @@ class RequestTypeAnalyser {
             $http->parseHeaders();
             $request = (new Request())
                 ->setHeader_Mass($http->getParsedHeaders());
-            echo $request->getHeader("Upgrade");
             if((new IsWebsocketHandshake($request))->is()) {
-                return "websocket-handshake";
+                return ["websocket-handshake", $http];
             }
-            return "http";
+            return ["http"];
         } else {
             return "websocket";
         }

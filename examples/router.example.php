@@ -2,7 +2,6 @@
 class MyAwesomeWS implements \Leloutama\lib\Core\Websocket\WebsocketHandlerInterface {
 
     public function onHandshake(\Leloutama\lib\Core\Modules\Http\Request $request, \Leloutama\lib\Core\Modules\Responses\HttpResponse $response) {
-        echo "Handshake!!!\n";
         return $response;
     }
 

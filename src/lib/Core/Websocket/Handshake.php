@@ -11,13 +11,13 @@ use FastRoute\Dispatcher;
 use Leloutama\lib\Core\Modules\Http\Request;
 use Leloutama\lib\Core\Modules\Http\ServerContentGetter;
 use Leloutama\lib\Core\Modules\Responses\HttpResponse;
-use SuperClosure\Serializer;
 
 class Handshake {
     private $websocketKey;
     private $clientWebsocketVersion;
     private $request;
     private $routeInfo;
+    private $internalData;
 
     const HANDSHAKE_MAGIC_STRING = "258EAFA5-E914-47DA-95CA-C5AB0DC85B11";
 
@@ -44,6 +44,7 @@ class Handshake {
 
     private function handleRoute(): HttpResponse {
         $routeInfo = $this->routeInfo;
+        $this->internalData["ok"] = false;
 
         switch ($routeInfo[0]) {
             case Dispatcher::NOT_FOUND:
@@ -64,6 +65,10 @@ class Handshake {
                 /** @var WebsocketHandlerInterface $handler */
                 $handler = unserialize($routeInfo[1]);
 
+                $this->internalData["serializedHandler"] = $routeInfo[1];
+
+                $this->internalData["ok"] = true;
+
                 $response = (new HttpResponse($this->request))
                     ->setHttpAndStatus("HTTP/1.1 101 Switching Protocols")
                     ->setHeader("Upgrade", "websocket")
@@ -76,6 +81,4 @@ class Handshake {
 
         return $response;
     }
-
-    private function checkIfDefaultRouteIsPresent() {}
 }

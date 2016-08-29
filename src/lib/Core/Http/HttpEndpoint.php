@@ -15,8 +15,6 @@ use Leloutama\lib\Core\Modules\Http\Creator;
 use Leloutama\lib\Core\Modules\Generic\Logger;
 use Leloutama\lib\Core\Modules\Http\RequestBuilder;
 use Leloutama\lib\Core\Modules\Responses\HttpResponse;
-use Leloutama\lib\Core\Websocket\Handshake;
-use Leloutama\lib\Core\Websocket\IsWebsocketHandshake;
 use SuperClosure\Serializer;
 use Leloutama\lib\Core\Modules\Http\ServerContentGetter;
 use Leloutama\lib\Core\Modules\Generic\ServerExtensionManager;
@@ -104,12 +102,6 @@ class HttpEndpoint implements Endpoint{
             $this->body->parse();
 
             $this->buildRequest();
-
-            if((new IsWebsocketHandshake($this->request))->is()) {
-                $routeInfo = $this->router->dispatch("GET", $this->http->getRequestedResource());
-                return (new Handshake($this->request, $routeInfo))
-                    ->getRawResponse();
-            }
 
             (new Logger($this->http, $this->config))
                 ->logRequest();
