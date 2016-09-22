@@ -1,105 +1,75 @@
-<?php
-/**
- * Created by PhpStorm.
- * User: gourab
- * Date: 14/5/16
- * Time: 1:26 AM
- */
+# Leloutama
+A multi-threaded webserver, written entirely in PHP.
 
-namespace Leloutama\lib\Core\Server;
-use Leloutama\lib\Core\Modules\Responses\HttpResponse;
+> **DO NOT USE CURRENT MASTER RATHER A RELEASE SOURCE. THINGS ARE BREAKING, AND WILL BREAK UNTIL THE NEXT RELEASE. YOU'VE BEEN WARNED.**
 
-class CgiInterface {
-    private $http;
-    private $peerInfo;
-    private $fileName;
-    private $port;
+### Requirements
+* PHP version >= 7, and a thread safe build
+* The [pthreads](https://github.com/krakjoe/pthreads) extension for PHP.
+mew mew
 
-    /**
-     * CgiInterface constructor.
-     * @param Http $http
-     * @param int $port
-     * @param string $peerInfo
-     * @param HttpResponse $response
-     */
-    public function __construct(Http $http, int $port, string $peerInfo, HttpResponse $response) {
-        $this->http = $http;
-        $this->port = $port;
-        $this->peerInfo = $peerInfo;
+# Install the dependencies and make things get going
 
-        $envVars = $this->createEnvVars();
-        $messageBody = $this->giveMessageBody();
-    }
+First of all, clone this repo, by:
 
-    private static function analyseResponse(HttpResponse $response) {
-        //
-    }
+```
+git clone https://github.com/gourabNagDev/Leloutama && cd Leloutama
+```
 
-    /**
-     * Creates the ENV vars for the cgi process, and returns an array consisting of them.
-     * @internal Http $http
-     * @return array
-     */
-    private function createEnvVars(): array {
-        /* Initialize the env array. */
-        $env = [];
+Get started by installing the dependencies, and writing the patches for the dependencies! Don't worry everything is automated!
+Just run the script by:
+```
+$ install/install
+```
+In the root directory of the server!
+**AND THE COMPOSER EXECUTABLE MUST INSTALLED GLOBALLY!**
 
-        /* Firstly, we need to parse the required details from the Http object */
-        // See: http://www.faqs.org/rfcs/rfc3875.html for details about the env vars.
+After that to launch the example server, do this:
 
-        // First the query string.
-        $env["QUERY_STRING"] = $this->http->getQueryString();
-        // Then requested URI.
-        $env["REQUESTED_URI"] = $this->http->getRequestedResource();
-        // Then request method.
-        $env["REQUEST_METHOD"] = $this->http->getMethod();
-        // Need to check if there is any request body
-        if(strlen($this->http->getRequestBody()) !== 0) {
-            // Set the content length
-            $env["CONTENT_LENGTH"] = $this->http->getHeaderParam("Content-Length");
-            // Set the content type
-            $env["CONTENT_TYPE"] = $this->http->getHeaderParam("Content-Type");
-        }
-        // Set the server protocol.
-        $env["SERVER_PROTOCOL"] = "HTTP/1.1";
-        // Set the server software.
-        $env["SERVER_SOFTWARE"] = "Leloutama v1.2";
-        // Set server port.
-        $env["SERVER_PORT"] = $this->port;
-        // Set remote address.
-        $env["REMOTE_ADDR"] = $this->peerInfo;
-        // Set redirect status.
-        $env["REDIRECT_STATUS"] = 200;
-        // Set server name.
-        $env["SERVER_NAME"] = $this->http->getHeaderParam("Host");
-        // Set script name.
-        $env["SCRIPT_NAME"] = $this->http->getRequestedResource();
-        // Set script file name.
-        $env["SCRIPT_FILENAME"] = $this->fileName;
+```
+$ cli/run --router examples/router.example.php
+```
 
-        /*
-         * Done all the hardcoded things, now need to set the HTTP_... things.
-         */
-        // Get the parsed headers.
-        $headers = $this->http->getParsedHeaders();
-        // Unset the 'route' key.
-        unset($headers["route"]);
-        // Iterate over the headers.
-        foreach ($headers as $header => $value) {
-            // Normalize the $header.
-            $header = str_replace("-", "_", $header);
-            $header = mb_strtoupper($header);
-            // Set the env.
-            $env[sprintf("HTTP_%s", $header)] = $value;
-        }
-        // Merge current $_ENV and $env
-        $finalEnv = array_merge($_ENV, $env);
+it would give an output like:
+```
+Server started successfully.
+Listening on ip: 127.0.0.1 at port: 1337
+```
 
-        // Finally RETURN the fuckin' environment variable.
-        return $finalEnv;
-    }
+Now, go to `localhost:1337` and you'd get to see the sample index page!
 
-    private function giveMessageBody(): string {
-        return $this->http->getRequestBody();
-    }
-}
+## TODO
+* Implement doc-blocks (v1.3.1)
+* Implement SSL (v1.3.1)
+* Do the README (v.1.3.1)
+* (...And more stuffs...)
+
+## New Features
+
+* Supports Twig Template Usage!
+* More stable
+* Design Upgrades
+
+## Why should you use it?
+* Supports HTTP Caching
+* Supports middleware in the form of extensions
+* Supports dynamic URL (thanks to FastRoute)
+* Supports GET, HEAD, and POST
+* No need to download additional servers, just PHP
+* etc...
+
+## Drawbacks
+
+* Currently, doesn't have much features.
+* The codebase is un-documented.
+* Many HTTP header's are yet to be utilised.
+* No SSL/TLS support.
+
+## PR-s
+
+Feel free to PR something...
+I really look forward for your contribution.
+
+## Issues
+
+Currently, none, but is sure to be coming up, with further use.
