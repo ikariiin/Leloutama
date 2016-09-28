@@ -14,7 +14,7 @@ use Leloutama\lib\Core\Modules\Http\RequestBuilder;
 use Leloutama\lib\Core\Websocket\Handshake;
 
 class WebsocketHandler {
-    public function __construct(Dispatcher $dispatcher, string $rawString, Http $http, Socket $socket, Socket $commSocket) {
+    public function __construct(Dispatcher $dispatcher, string $rawString, Http $http) {
         $body = new Body();
         $body->load($rawString);
 
@@ -22,28 +22,8 @@ class WebsocketHandler {
             ->buildRequest($http, $body);
 
         $routeInfo = $dispatcher->dispatch("GET", $request->getRequestedResource());
-
-        $COMMAND_INITIATOR_THREAD = new ThreadDispatcher(function (&$_this, Socket $commSocket, Socket $responsibilitySocket, Request $request, array $routeInfo) {
-            WebsocketHandler::_commAndInitiatorThread($commSocket, $responsibilitySocket, $request, $routeInfo);
-        }, [$commSocket, $socket, $request, $routeInfo]);
-
-        $COMMAND_INITIATOR_THREAD->start();
     }
 
     public static function _commAndInitiatorThread(Socket $commSocket, Socket $responsibilitySocket, Request $request, array $routeInfo) {
-        $client = $responsibilitySocket->getStream();
-        $handshake = new Handshake($request, $routeInfo);
-
-        fwrite($client, $handshake->getRawResponse());
-        // Handshake response sent
-        $SOCKET_WATCHER_THREAD = new ThreadDispatcher(function (Socket $commSocket, Socket $responsibilitySocket) {
-            while(($responsibility = fread($responsibilitySocket->getStream(), 8096 * 2))){
-                // Parse $responsibility
-                $parsedResponsibility = $responsibility;
-            }
-        }, [$commSocket, $responsibilitySocket]);
-        while(($comm = fread($commSocket->getStream(), 8096 * 2))) {
-            var_dump($comm);
-        }
     }
 }

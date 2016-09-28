@@ -11,6 +11,9 @@ use FastRoute\Dispatcher;
 use Leloutama\lib\Core\Http\Body;
 use Leloutama\lib\Core\Http\Http;
 use Leloutama\lib\Core\Http\HttpEndpoint;
+use Leloutama\lib\Core\IPC\Loop\Loop;
+use Leloutama\lib\Core\IPC\Loop\ServerSocket;
+use Leloutama\lib\Core\IPC\WebsocketTransport\IServer;
 use Leloutama\lib\Core\Modules\Generic\Logger;
 use Leloutama\lib\Core\Modules\Http\Request;
 use Leloutama\lib\Core\Modules\Http\RequestBuilder;
@@ -63,6 +66,12 @@ class Server {
                     $ipAddress,
                     $port
                 );
+
+                (new ThreadDispatcher([Server::class, "commInit"], []))
+                    ->start();
+
+                var_dump("?");
+                
                 while(true) {
                     $client = stream_socket_accept($stream);
 
@@ -102,19 +111,7 @@ class Server {
                                 ->buildRequest($http, $body);
 
                             $socket = new Socket($client);
-
-                            $ListenerThread = new ThreadDispatcher(function (&$_this, Dispatcher $dispatcher, Socket $client, Request $request){
-                                $stream = $client->getStream();
-                                $routeInfo = $dispatcher->dispatch("GET", $request->getRequestedResource());
-                                $websocketHandshake = new Handshake($request, $routeInfo);
-                                fwrite($stream, $websocketHandshake->getRawResponse());
-
-                                while(($out = fread($stream, 4096 * 2))) {
-                                    var_dump($out);
-                                }
-                            }, [$dispatcher, $socket, $request]);
-
-                            $ListenerThread->start();
+                            $wsHandleTh = new ThreadDispatcher([Server::class, "newWebsocketHandler"], [$request, $http, $socket]);
                         }
                     }
                 }
@@ -125,5 +122,21 @@ class Server {
         };
 
         return $webserverCallable;
+    }
+
+    public static function newWebsocketHandler(Request $request, Http $http, Socket $socket) {
+        var_dump($request, $http, $socket);
+    }
+
+    public static function commInit(&$_this) {
+        $loop = new Loop;
+        $IPCServer = new IServer(
+            $loop,
+            (new ServerSocket(
+                stream_socket_server("tcp://127.0.0.1:47806"))
+            )
+        );
+        $IPCServer->start();
+        $loop->run();
     }
 }

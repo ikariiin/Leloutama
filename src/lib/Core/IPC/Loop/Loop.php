@@ -47,10 +47,7 @@ class Loop
         }
     }
 
-    private function tick()
-    {
-        echo "Loop tick\n";
-
+    private function tick() {
         $r = $this->readSockets;
         $w = $this->writeSockets;
         $e = null;

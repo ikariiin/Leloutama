@@ -20,6 +20,9 @@ class ThreadDispatcher extends \Thread {
 
     public function run() {
         $ToPerform = $this->ToPerform;
+        if(is_object($ToPerform) && !$ToPerform instanceof \Closure) {
+            $ToPerform = (array) $ToPerform;
+        }
         return $ToPerform($this, ...$this->arguments);
     }
 }
